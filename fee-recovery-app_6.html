@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vakati &amp; Associates — Fee Recovery</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#F7F6F2;--surface:#FFFFFF;--surface2:#F0EEE8;
+    --border:#E2DDD4;--border2:#CCC8BE;
+    --text:#1C1B18;--text2:#6B6860;--text3:#9C9A94;
+    --blue:#1A5FD4;--blue-bg:#EBF1FC;--blue-border:#B5CEEF;
+    --green:#1A7A4A;--green-bg:#E8F5EE;--green-border:#A3D4B8;
+    --amber:#A05C00;--amber-bg:#FDF3E0;--amber-border:#F5C97A;
+    --red:#B82A2A;--red-bg:#FCEAEA;--red-border:#EFA3A3;
+    --purple:#5B3DA8;--purple-bg:#F0ECFC;--purple-border:#C9BAF0;
+    --radius:10px;--radius-lg:14px;
+    --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  }
+  body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+  /* LOGIN */
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem;width:380px;box-shadow:0 2px 16px rgba(0,0,0,0.06)}
+  .login-card h1{font-size:22px;font-weight:600;margin-bottom:4px}
+  .login-card p{color:var(--text2);font-size:13px;margin-bottom:2rem}
+  .field{margin-bottom:1rem}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  .field input,.field select{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--font);font-size:14px;background:var(--surface);color:var(--text);outline:none}
+  .field input:focus,.field select:focus{border-color:var(--blue)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius);border:none;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;transition:all .15s}
+  .btn-primary{background:var(--text);color:#fff}
+  .btn-primary:hover{background:#333}
+  .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+  .btn-ghost:hover{background:var(--surface2)}
+  .btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+  .btn-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+  .btn-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-full{width:100%;justify-content:center}
+
+  /* LAYOUT */
+  #app{display:none;min-height:100vh}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .topbar-left{display:flex;align-items:center;gap:16px}
+  .logo{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .logo span{color:var(--blue)}
+  .nav{display:flex;gap:2px}
+  .nav-btn{padding:6px 14px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text2);transition:all .15s}
+  .nav-btn:hover{background:var(--surface2);color:var(--text)}
+  .nav-btn.active{background:var(--surface2);color:var(--text)}
+  .user-chip{display:flex;align-items:center;gap:8px;font-size:13px}
+  .avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600}
+  .avatar-partner{background:var(--purple-bg);color:var(--purple)}
+  .avatar-staff{background:var(--blue-bg);color:var(--blue)}
+  .role-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+  .badge-partner{background:var(--purple-bg);color:var(--purple)}
+  .badge-staff{background:var(--blue-bg);color:var(--blue)}
+
+  .main{max-width:1100px;margin:0 auto;padding:28px 24px}
+  .page{display:none}
+  .page.active{display:block}
+
+  /* CARDS & GRID */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem}
+  .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem}
+  .metric-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .metric-value{font-size:26px;font-weight:600;font-family:var(--mono);letter-spacing:-.02em}
+  .metric-sub{font-size:12px;color:var(--text2);margin-top:4px}
+
+  /* STATUS BADGES */
+  .status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+  .status-overdue{background:var(--red-bg);color:var(--red)}
+  .status-due{background:var(--amber-bg);color:var(--amber)}
+  .status-ok{background:var(--green-bg);color:var(--green)}
+  .status-partner{background:var(--purple-bg);color:var(--purple)}
+  .status-locked{background:var(--surface2);color:var(--text3)}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+  td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--bg)}
+
+  /* CALL FREQ BADGES */
+  .freq-badge{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+  .freq-2{background:#FEF3E2;color:#92550A}
+  .freq-1{background:#EBF1FC;color:#1A5FD4}
+  .freq-fn{background:#F0ECFC;color:#5B3DA8}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--surface);border-radius:var(--radius-lg);padding:2rem;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;border:1px solid var(--border)}
+  .modal h2{font-size:17px;font-weight:600;margin-bottom:1.5rem}
+  .modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .form-section{margin-bottom:1.25rem}
+  .form-section-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+  /* CALL LOG */
+  .call-log-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+  .call-log-item:last-child{border-bottom:none}
+  .call-dot{width:8px;height:8px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0}
+  .call-log-meta{font-size:12px;color:var(--text2);margin-top:2px}
+
+  /* IMPORT */
+  .drop-zone{border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:3rem;text-align:center;cursor:pointer;transition:all .2s}
+  .drop-zone:hover,.drop-zone.drag{border-color:var(--blue);background:var(--blue-bg)}
+  .drop-zone-icon{font-size:32px;margin-bottom:12px;opacity:.4}
+  .drop-zone h3{font-size:15px;font-weight:500;margin-bottom:6px}
+  .drop-zone p{font-size:13px;color:var(--text2)}
+
+  /* TABS */
+  .tabs{display:flex;gap:2px;margin-bottom:20px;background:var(--surface2);padding:4px;border-radius:var(--radius);width:fit-content}
+  .tab{padding:6px 16px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text2);transition:all .15s}
+  .tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+  /* SECTION HEADER */
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .section-title{font-size:18px;font-weight:600}
+  .section-sub{font-size:13px;color:var(--text2);margin-top:2px}
+
+  /* ALERT */
+  .alert{padding:12px 16px;border-radius:var(--radius);font-size:13px;display:flex;align-items:flex-start;gap:10px;margin-bottom:16px}
+  .alert-warning{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+  .alert-info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+  .alert-success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+
+  /* SEARCH */
+  .search-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+  .search-input{flex:1;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text);outline:none}
+  .search-input:focus{border-color:var(--blue)}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;right:24px;background:#1C1B18;color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:13px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+  #toast.show{transform:translateY(0);opacity:1}
+
+  .empty{text-align:center;padding:3rem;color:var(--text2);font-size:13px}
+  .priority-high{border-left:3px solid var(--red)!important}
+  .priority-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--red-bg);color:var(--red);text-transform:uppercase;letter-spacing:.05em}
+  .inactive-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--amber-bg);color:var(--amber);text-transform:uppercase;letter-spacing:.05em}
+  .template-chip{display:inline-block;padding:5px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:12px;cursor:pointer;margin:3px;transition:all .15s}
+  .template-chip:hover{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue)}
+  .ageing-bar{height:6px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:4px}
+  .ageing-fill{height:100%;border-radius:3px;transition:width .3s}
+  .bell-dot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--red);border:1px solid var(--surface)}
+  .notif-btn{position:relative;padding:5px 10px;cursor:pointer}
+  .notif-panel{position:absolute;top:48px;right:80px;width:320px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,.12);z-index:300;display:none}
+  .notif-panel.open{display:block}
+  .notif-item{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer}
+  .notif-item:hover{background:var(--bg)}
+  .notif-item:last-child{border-bottom:none}
+  .empty-icon{font-size:28px;margin-bottom:8px;opacity:.3}
+
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--surface2);color:var(--text2);font-weight:500}
+
+  @media(max-width:700px){
+    .metrics-grid{grid-template-columns:1fr 1fr}
+    .form-row{grid-template-columns:1fr}
+    .topbar{padding:0 12px}
+    .main{padding:16px 12px}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Vakati &amp; Associates</h1>
+    <p>Vakati &amp; Associates — Fee Recovery Portal</p>
+
+    <!-- Loading state -->
+    <div id="login-loading" style="text-align:center;padding:1.5rem 0">
+      <div style="display:inline-block;width:28px;height:28px;border:2.5px solid #E2DDD4;border-top-color:#1C1B18;border-radius:50%;animation:spin .7s linear infinite;margin-bottom:10px"></div>
+      <div style="font-size:13px;color:#6B6860">Loading users…</div>
+    </div>
+
+    <!-- Sign in form — hidden until users are loaded -->
+    <div id="login-form" style="display:none">
+      <div class="field">
+        <label>Sign in as</label>
+        <select id="login-user">
+          <option value="">— select user —</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">Vakati <span>&amp; Associates</span></div>
+      <nav class="nav">
+        <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+        <button class="nav-btn" onclick="showPage('clients')">Clients</button>
+        <button class="nav-btn" onclick="showPage('calls')">Call Log</button>
+        <button class="nav-btn" onclick="showPage('import')">Import</button>
+        <button class="nav-btn" onclick="showPage('recovery')">Recovery</button>
+        <button class="nav-btn" onclick="showPage('reports')">Reports</button>
+        <button class="nav-btn" id="nav-settings" onclick="showPage('settings')" style="display:none">Settings</button>
+        <button class="nav-btn" id="nav-users" onclick="showPage('users')" style="display:none">Users</button>
+      </nav>
+    </div>
+    <div class="user-chip">
+      <div class="notif-btn btn btn-ghost" onclick="toggleNotifPanel()" id="bell-btn" style="padding:5px 10px;font-size:13px">
+        🔔<span class="bell-dot" id="bell-dot" style="display:none"></span>
+      </div>
+      <div class="notif-panel" id="notif-panel">
+        <div style="padding:12px 16px;font-size:12px;font-weight:600;border-bottom:1px solid var(--border)">Reminders & Alerts</div>
+        <div id="notif-list"></div>
+      </div>
+      <div class="avatar" id="user-avatar"></div>
+      <span id="user-name" style="font-weight:500;font-size:13px"></span>
+      <span id="user-role-badge" class="role-badge"></span>
+      <span id="sync-status" style="font-size:12px;min-width:70px;text-align:right"></span>
+      <button class="btn btn-green" id="emergency-save-btn" style="padding:5px 10px;font-size:12px;display:none" onclick="emergencySave()">💾 Save Now</button>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Dashboard</div>
+          <div class="section-sub" id="dash-greeting"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-danger" id="wipe-btn" style="display:none" onclick="confirmWipeClients()">🗑 Wipe All Clients</button>
+          <button class="btn btn-primary" onclick="openAddClient()">+ Add Client</button>
+        </div>
+      </div>
+      <div class="metrics-grid" id="metrics-grid"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px">⚠️ Overdue Calls Today</div>
+          <div id="dash-overdue"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">📋 Calls to Make Today <span id="today-call-count" style="font-size:12px;font-weight:500;color:var(--text2)"></span></div>
+          <div id="dash-upcoming"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">📵 No Answer Today <span id="no-answer-count" style="font-size:12px;font-weight:500;color:var(--text2)"></span></div>
+          <div id="dash-no-answer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div id="page-clients" class="page">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Clients</div>
+          <div class="section-sub" id="clients-sub"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-blue" id="reset-dates-btn" style="display:none" onclick="confirmResetDueDates()">📅 Reset Due Dates to Today</button>
+          <button class="btn btn-primary" onclick="openAddClient()">+ Add Client</button>
+        </div>
+      </div>
+      <div class="search-bar">
+        <input class="search-input" id="client-search" placeholder="Search clients…" oninput="renderClients()">
+        <select id="filter-freq" class="search-input" style="width:180px" onchange="renderClients()">
+          <option value="">All frequencies</option>
+          <option value="2x">Twice a week</option>
+          <option value="1x">Once a week</option>
+          <option value="fn">Fortnightly</option>
+          <option value="partner-only">Partner only</option>
+        </select>
+        <select id="filter-status" class="search-input" style="width:150px" onchange="renderClients()">
+          <option value="">All statuses</option>
+          <option value="overdue">Overdue</option>
+          <option value="due">Due today</option>
+          <option value="ok">Up to date</option>
+        </select>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Outstanding</th>
+                <th>Call Frequency</th>
+                <th>Next Due</th>
+                <th>Last Call</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="clients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALL LOG -->
+    <div id="page-calls" class="page">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Call Log</div>
+          <div class="section-sub">All calls visible to partners and staff</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="filterCalls('all',this)">All Calls</button>
+        <button class="tab" onclick="filterCalls('mine',this)">My Calls</button>
+      </div>
+      <div class="card" id="call-log-container"></div>
+    </div>
+
+    <!-- IMPORT -->
+    <div id="page-import" class="page">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Import from Practise</div>
+          <div class="section-sub">Upload outstanding report CSV/Excel — existing call data is never overwritten</div>
+        </div>
+      </div>
+      <div class="alert alert-info">
+        ℹ️ Import updates client outstanding balances only. All call logs and history are preserved. New clients found in the file will be added automatically.
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <div class="drop-zone-icon">📂</div>
+          <h3>Drop your Practise export here</h3>
+          <p>Supports CSV or Excel (.xlsx, .xls) — or click to browse</p>
+          <input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFile(this.files[0])">
+        </div>
+      </div>
+      <div id="import-preview" style="display:none">
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:14px" id="import-title"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Client Name</th><th>Outstanding (₹)</th><th>Action</th></tr>
+              </thead>
+              <tbody id="import-tbody"></tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="cancelImport()">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmImport()">Confirm Import</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Import history</div>
+        <div id="import-history"></div>
+      </div>
+    </div>
+
+
+
+    <!-- RECOVERY -->
+    <div id="page-recovery" class="page">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Amount Recovered</div>
+          <div class="section-sub">All payments logged as received</div>
+        </div>
+      </div>
+      <div class="metrics-grid" id="recovery-metrics" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="tabs">
+        <button class="tab active" onclick="filterRecovery('all',this)">All Time</button>
+        <button class="tab" onclick="filterRecovery('month',this)">This Month</button>
+        <button class="tab" onclick="filterRecovery('week',this)">This Week</button>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Amount Recovered</th>
+                <th>Logged By</th>
+                <th>Date</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="recovery-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div id="page-reports" class="page">
+      <div class="section-header">
+        <div><div class="section-title">Reports</div><div class="section-sub">Ageing, staff performance & client insights</div></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchReportTab('ageing',this)">Ageing Report</button>
+        <button class="tab" onclick="switchReportTab('performance',this)">Staff Performance</button>
+        <button class="tab" onclick="switchReportTab('inactivity',this)">Inactivity Alerts</button>
+        <button class="tab" onclick="switchReportTab('highvalue',this)">High Value</button>
+      </div>
+      <div id="report-content"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="page-settings" class="page">
+      <div class="section-header">
+        <div><div class="section-title">Settings</div><div class="section-sub">Partners only — configure app behaviour</div></div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:16px">📝 Call Note Templates</div>
+          <div id="templates-list"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <input id="new-template-input" class="search-input" placeholder="Add new template…" style="flex:1">
+            <button class="btn btn-blue" onclick="addTemplate()">+ Add</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:16px">🔔 Call Reminder</div>
+          <div class="field">
+            <label>Alert me before due time (minutes)</label>
+            <input id="setting-reminder" type="number" min="0" max="1440" placeholder="60">
+          </div>
+          <div style="font-size:14px;font-weight:600;margin:16px 0">⚡ High Value Threshold (₹)</div>
+          <div class="field">
+            <label>Flag clients with outstanding above</label>
+            <input id="setting-highvalue" type="number" min="0" placeholder="50000">
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1">
+          <div style="font-size:14px;font-weight:600;margin-bottom:16px">😴 Inactivity Thresholds (days)</div>
+          <div class="form-row">
+            <div class="field"><label>Twice a week — flag after (days)</label><input id="set-inact-2x" type="number" min="1"></div>
+            <div class="field"><label>Once a week — flag after (days)</label><input id="set-inact-1x" type="number" min="1"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Fortnightly — flag after (days)</label><input id="set-inact-fn" type="number" min="1"></div>
+            <div class="field"><label>Partner weekly — flag after (days)</label><input id="set-inact-p1x" type="number" min="1"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="page-users" class="page">
+      <div class="section-header">
+        <div>
+          <div class="section-title">User Management</div>
+          <div class="section-sub">Partners only — add, edit or remove partners and staff</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="cleanDuplicateUsers()" id="clean-dupes-btn">🧹 Clean Duplicates</button>
+          <button class="btn btn-primary" onclick="openAddUser()">+ Add User</button>
+        </div>
+      </div>
+      <div id="dupes-alert" style="display:none" class="alert alert-warning" style="margin-bottom:16px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div style="font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span class="role-badge badge-partner">Partner</span> Partners</div>
+          <div id="users-partners-list"></div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px"><span class="role-badge badge-staff">Staff</span> Staff</div>
+          <div id="users-staff-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD/EDIT CLIENT MODAL -->
+<div class="modal-overlay" id="modal-client">
+  <div class="modal">
+    <h2 id="modal-client-title">Add New Client</h2>
+    <input type="hidden" id="edit-client-id">
+    <div class="form-section">
+      <div class="form-section-title">Client details</div>
+      <div class="form-row">
+        <div class="field"><label>Client name *</label><input id="c-name" placeholder="e.g. Smith & Co Ltd"></div>
+        <div class="field"><label>Contact person</label><input id="c-contact" placeholder="Full name"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Email</label><input id="c-email" type="email" placeholder="email@example.com"></div>
+        <div class="field"><label>Phone</label><input id="c-phone" placeholder="+44 …"></div>
+      </div>
+      <div class="field"><label>Outstanding balance (₹)</label><input id="c-outstanding" type="number" placeholder="0.00"></div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Access & follow-up</div>
+      <div class="field">
+        <label>Access level</label>
+        <select id="c-access" onchange="toggleFreq()">
+          <option value="staff">Staff & Partners</option>
+          <option value="partner">Partners only</option>
+        </select>
+      </div>
+      <div id="freq-section" class="field">
+        <label>Call frequency *</label>
+        <select id="c-freq">
+          <option value="2x">Twice a week</option>
+          <option value="1x">Once a week</option>
+          <option value="fn">Once a fortnight</option>
+          <option value="p-1x">Partner — weekly</option>
+          <option value="p-fn">Partner — fortnightly</option>
+        </select>
+      </div>
+      <div class="field"><label>Notes</label><input id="c-notes" placeholder="Any additional notes…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-client')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG CALL MODAL -->
+<div class="modal-overlay" id="modal-call">
+  <div class="modal">
+    <h2>Log a Call</h2>
+    <input type="hidden" id="call-client-id">
+    <div class="field"><label>Client</label><input id="call-client-name" readonly style="background:var(--surface2)"></div>
+    <div class="field">
+      <label style="display:flex;justify-content:space-between;align-items:center">
+        Date & time
+        <span id="live-clock" style="font-family:var(--mono);font-size:12px;color:var(--blue);font-weight:500"></span>
+      </label>
+      <input id="call-date" type="datetime-local">
+      <div style="margin-top:6px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="use-realtime" checked onchange="toggleRealtime()"> Use current time (auto-updates)
+        </label>
+      </div>
+    </div>
+    <div class="field"><label>Outcome</label>
+      <select id="call-outcome" onchange="toggleAmountField()">
+        <option value="contacted">Contacted — payment promised</option>
+        <option value="voicemail">Left voicemail</option>
+        <option value="no-answer">No answer</option>
+        <option value="paid">Payment received</option>
+        <option value="dispute">Client disputed</option>
+      </select>
+    </div>
+    <div class="field" id="amount-recovered-field" style="display:none">
+      <label>Amount recovered (₹) *</label>
+      <input id="call-amount" type="number" placeholder="Enter amount received" min="0">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <input id="call-notes" placeholder="Optional notes…">
+      <div id="note-templates-row" style="margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="stopRealtimeClock();closeModal('modal-call')">Cancel</button>
+      <button class="btn btn-green" onclick="saveCall()">✓ Log Call</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT DETAIL MODAL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal" style="width:600px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem">
+      <div>
+        <h2 style="margin-bottom:4px" id="detail-name"></h2>
+        <div id="detail-meta" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')" style="padding:4px 10px">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.5rem">
+      <div class="metric-card"><div class="metric-label">Outstanding</div><div class="metric-value" id="detail-outstanding" style="font-size:20px"></div></div>
+      <div class="metric-card"><div class="metric-label">Call frequency</div><div style="font-size:14px;font-weight:500;margin-top:4px" id="detail-freq"></div></div>
+      <div class="metric-card"><div class="metric-label">Next call due</div><div style="font-size:14px;font-weight:500;margin-top:4px" id="detail-next"></div></div>
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Call history</div>
+    <div id="detail-calls" style="max-height:250px;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>
+      <button class="btn btn-ghost" id="detail-edit-btn">Edit client</button>
+      <button class="btn btn-green" id="detail-call-btn">+ Log call</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ADD/EDIT USER MODAL -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal">
+    <h2 id="modal-user-title">Add User</h2>
+    <input type="hidden" id="edit-user-id">
+    <div class="form-row">
+      <div class="field"><label>First name *</label><input id="u-first" placeholder="e.g. Ravi"></div>
+      <div class="field"><label>Last name *</label><input id="u-last" placeholder="e.g. Sharma"></div>
+    </div>
+    <div class="field"><label>Role *</label>
+      <select id="u-role">
+        <option value="partner">Partner</option>
+        <option value="staff">Staff</option>
+      </select>
+    </div>
+    <div class="field"><label>Email</label><input id="u-email" type="email" placeholder="email@firm.com"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-user')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- WIPE CLIENTS MODAL -->
+<div class="modal-overlay" id="modal-wipe">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+    <h2 style="margin-bottom:8px">Wipe entire client list?</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:8px">This will permanently delete <strong id="wipe-count"></strong> clients and all their call logs.</p>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">Type <strong>WIPE</strong> below to confirm.</p>
+    <div class="field" style="text-align:left">
+      <input id="wipe-confirm-input" placeholder="Type WIPE to confirm" oninput="checkWipeInput()"
+        style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--radius);font-family:var(--font);font-size:14px;text-transform:uppercase;letter-spacing:.08em">
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-ghost" onclick="closeModal('modal-wipe')">Cancel</button>
+      <button class="btn btn-danger" id="wipe-confirm-btn" disabled onclick="executeWipe()">Delete Everything</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- RESET DUE DATES MODAL -->
+<div class="modal-overlay" id="modal-reset-dates">
+  <div class="modal" style="max-width:440px;text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">📅</div>
+    <h2 style="margin-bottom:8px">Reset all due dates to today?</h2>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:6px">This will set <strong>all client due dates to today</strong> so you can start logging calls immediately.</p>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1.5rem">Call logs and outstanding balances will <strong>not</strong> be affected.</p>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reset-dates')">Cancel</button>
+      <button class="btn btn-blue" onclick="executeResetDueDates()">✓ Reset to Today</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── FIREBASE CONFIG ──
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDBwG3Gpzx3bGbyEJUx0Jh0ke5rB_1TwH4",
+  authDomain: "fee-track-78898.firebaseapp.com",
+  databaseURL: "https://fee-track-78898-default-rtdb.firebaseio.com",
+  projectId: "fee-track-78898",
+  storageBucket: "fee-track-78898.firebasestorage.app",
+  messagingSenderId: "932506824704",
+  appId: "1:932506824704:web:fb5cab4ba55e9e31a0a8e5"
+};
+const DB_URL = FIREBASE_CONFIG.databaseURL;
+const API_KEY = FIREBASE_CONFIG.apiKey;
+
+// Firebase REST helper — no SDK needed, pure fetch
+async function fbGet(path){
+  const res = await fetch(`${DB_URL}/${path}.json?auth=${API_KEY}`);
+  return await res.json();
+}
+async function fbSet(path, data){
+  await fetch(`${DB_URL}/${path}.json?auth=${API_KEY}`, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+}
+
+// ── STATE ──
+let currentUser = null;
+let clients = [];
+let callLogs = [];
+let importHistory = [];
+let callFilter = 'all';
+let nextClientId = 1;
+let nextCallId = 1;
+let isSyncing = false;
+let isLoading = false; // blocks saveToSheet during initial data load
+
+// ── SETTINGS (editable by partners) ──
+let settings = {
+  noteTemplates: ['Promised payment by end of week', 'Left voicemail — will call back', 'Client requested callback', 'Dispute raised — escalate to partner', 'Payment plan agreed'],
+  highValueThreshold: 50000,
+  inactivityDays: { '2x': 4, '1x': 8, 'fn': 16, 'p-1x': 8, 'p-fn': 16 },
+  callReminderMinutes: 60,
+};
+
+let users = [];
+let nextUserId = 1;
+
+function getUserById(id){ return users.find(u=>u.id===id); }
+
+function isPartner(){ return currentUser && currentUser.role === 'partner'; }
+
+// ── SEED DATA (no-op — data comes from Google Sheets) ──
+function seedData(){ /* data loaded from sheet */ }
+
+// ── AUTH ──
+function doLogin(){
+  const sel = document.getElementById('login-user').value;
+  if(!sel) return toast('Please select a user');
+  const u = getUserById(sel);
+  if(!u) return toast('User not found');
+  currentUser = {...u};
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  // user chip
+  const av = document.getElementById('user-avatar');
+  av.textContent = currentUser.initials;
+  av.className = 'avatar avatar-'+currentUser.role;
+  document.getElementById('user-name').textContent = currentUser.name;
+  const rb = document.getElementById('user-role-badge');
+  rb.textContent = currentUser.role;
+  rb.className = 'role-badge badge-'+currentUser.role;
+  document.getElementById('nav-users').style.display = isPartner() ? '' : 'none';
+  document.getElementById('nav-settings').style.display = isPartner() ? '' : 'none';
+  document.getElementById('emergency-save-btn').style.display = isPartner() ? '' : 'none';
+  loadFromSheet();
+}
+function doLogout(){
+  currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  // Show spinner while reloading users
+  const ll = document.getElementById('login-loading');
+  const lf = document.getElementById('login-form');
+  if(ll) ll.style.display = 'block';
+  if(lf) lf.style.display = 'none';
+  (async()=>{
+    // Show cached users instantly
+    try {
+      const cached = localStorage.getItem('feetrack_users');
+      if(cached){
+        const parsed = JSON.parse(cached);
+        const seen = {};
+        parsed.forEach(u=>{ seen[u.id]=u; });
+        users = Object.values(seen);
+      }
+    } catch(e){}
+    buildLoginDropdown();
+    // Refresh from Firebase in background
+    try{
+      const data = await fbGet('feetrack/users');
+      if(data){
+        const arr = Object.values(data);
+        const seen = {};
+        arr.forEach(u=>{ seen[u.id]=u; });
+        users = Object.values(seen);
+        try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
+        buildLoginDropdown();
+      }
+    }catch(e){}
+  })();
+}
+
+// ── NAVIGATION ──
+function showPage(name){
+  if(name==='users' && !isPartner()) return toast('Only partners can manage users');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  event && event.target.classList.add('active');
+  if(name==='dashboard') renderDashboard();
+  if(name==='clients') renderClients();
+  if(name==='users') renderUsers();
+  if(name==='calls') renderCallLog();
+  if(name==='import') renderImportHistory();
+  if(name==='recovery') renderRecovery();
+  if(name==='reports'){ currentReportTab='ageing'; renderReport(); }
+  if(name==='settings') renderSettings();
+}
+
+// ── HELPERS ──
+function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(s){ if(!s)return '—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function fmtDateTime(s){ if(!s)return '—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+
+function freqLabel(f){
+  if(f==='2x')   return '<span class="freq-badge freq-2">Twice a week</span>';
+  if(f==='1x')   return '<span class="freq-badge freq-1">Once a week</span>';
+  if(f==='fn')   return '<span class="freq-badge freq-fn">Fortnightly</span>';
+  if(f==='p-1x') return '<span class="freq-badge freq-1">Weekly (Partner)</span>';
+  if(f==='p-fn') return '<span class="freq-badge freq-fn">Fortnightly (Partner)</span>';
+  if(f==='partner-only') return '<span class="status status-partner">Partner only</span>';
+  return '—';
+}
+
+function callStatus(client){
+  if(!client.nextDue) return '<span class="status status-ok">OK</span>';
+  const now = new Date(); now.setHours(0,0,0,0);
+  const due = new Date(client.nextDue); due.setHours(0,0,0,0);
+  const diff = Math.floor((due - now)/(1000*60*60*24));
+  if(diff < 0) return '<span class="status status-overdue">Overdue</span>';
+  if(diff === 0) return '<span class="status status-due">Due today</span>';
+  return '<span class="status status-ok">OK</span>';
+}
+
+function getCallStatus(client){
+  if(!client.nextDue) return 'ok';
+  const now = new Date(); now.setHours(0,0,0,0);
+  const due = new Date(client.nextDue); due.setHours(0,0,0,0);
+  const diff = Math.floor((due - now)/(1000*60*60*24));
+  if(diff < 0) return 'overdue';
+  if(diff === 0) return 'due';
+  return 'ok';
+}
+
+function outcomeLabel(o){
+  const map={contacted:'✅ Contacted',voicemail:'📞 Voicemail',paid:'💰 Paid','no-answer':'❌ No answer',dispute:'⚠️ Dispute'};
+  return map[o]||o;
+}
+
+function canInteract(client){
+  if(client.access==='partner' && !isPartner()) return false;
+  return true;
+}
+
+function visibleClients(){
+  return clients; // all clients visible, but partner-only are locked for staff
+}
+
+function skipSunday(d){
+  // If the resulting date is a Sunday (0), move to Monday
+  if(d.getDay()===0) d.setDate(d.getDate()+1);
+  return d;
+}
+
+function nextDueDate(freq){
+  const d = new Date();
+  if(freq==='2x'){       d.setDate(d.getDate()+3); }
+  else if(freq==='1x'){  d.setDate(d.getDate()+7); }
+  else if(freq==='fn'){  d.setDate(d.getDate()+14); }
+  else if(freq==='p-1x'){d.setDate(d.getDate()+7); }
+  else if(freq==='p-fn'){d.setDate(d.getDate()+14); }
+  skipSunday(d);
+  return d.toISOString().slice(0,16);
+}
+
+function advanceNextDue(client){
+  client.nextDue = nextDueDate(client.freq);
+  client.lastCall = new Date().toISOString().slice(0,16);
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  const hour = new Date().getHours();
+  const greeting = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
+  document.getElementById('dash-greeting').textContent = greeting+', '+currentUser.name;
+
+  const visible = visibleClients();
+  const total = visible.filter(c=>canInteract(c)).reduce((s,c)=>s+(Math.round((parseFloat(c.outstanding)||0)*100)/100),0);
+  const overdue = visible.filter(c=>getCallStatus(c)==='overdue').length;
+  const dueToday = visible.filter(c=>getCallStatus(c)==='due').length;
+  const myCalls = callLogs.filter(c=>c.userId===currentUser.id).length;
+
+  const totalRecovered = callLogs.filter(l=>l.outcome==='paid').reduce((s,l)=>s+(parseFloat(l.amountRecovered)||0),0);
+  document.getElementById('metrics-grid').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Total outstanding</div><div class="metric-value">${fmt(total)}</div><div class="metric-sub">${isPartner()?'All accessible clients':'Your accessible clients'}</div></div>
+    <div class="metric-card"><div class="metric-label">Amount recovered</div><div class="metric-value" style="color:var(--green)">${fmt(totalRecovered)}</div><div class="metric-sub" style="cursor:pointer;color:var(--blue)" onclick="showPage('recovery');document.querySelectorAll('.nav-btn')[4].classList.add('active')">View breakdown →</div></div>
+    <div class="metric-card"><div class="metric-label">Overdue calls</div><div class="metric-value" style="color:var(--red)">${overdue}</div><div class="metric-sub">Need immediate follow-up</div></div>
+    <div class="metric-card"><div class="metric-label">Due today</div><div class="metric-value" style="color:var(--amber)">${dueToday}</div><div class="metric-sub">Scheduled for today</div></div>
+  `;
+
+  const overdueClients = visible.filter(c=>getCallStatus(c)==='overdue'&&canInteract(c));
+  const odEl = document.getElementById('dash-overdue');
+  if(overdueClients.length===0){ odEl.innerHTML='<div class="empty"><div class="empty-icon">✅</div>No overdue calls</div>'; }
+  else {
+    odEl.innerHTML = overdueClients.slice(0,4).map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:500;font-size:13px">${c.name}</div>
+          <div style="font-size:12px;color:var(--text2)">${fmt(c.outstanding)} outstanding · ${fmtDate(c.nextDue)}</div>
+        </div>
+        <button class="btn btn-green" style="padding:5px 10px;font-size:12px" onclick="openLogCall(${c.id})">Log call</button>
+      </div>`).join('');
+  }
+
+  buildNotifications();
+  const todayStr = new Date().toDateString();
+  const calledTodayIds = new Set(callLogs.filter(l=>new Date(l.date).toDateString()===todayStr).map(l=>Number(l.clientId)));
+
+  const allDueToday = visible
+    .filter(c=>getCallStatus(c)==='due' && canInteract(c))
+    .sort((a,b)=>(parseFloat(b.outstanding)||0)-(parseFloat(a.outstanding)||0));
+
+  // Only show clients NOT yet called today
+  const upcomingClients = allDueToday.filter(c=>!calledTodayIds.has(Number(c.id)));
+
+  const upEl = document.getElementById('dash-upcoming');
+
+  const countEl = document.getElementById('today-call-count');
+  if(countEl){
+    const doneToday = allDueToday.length - upcomingClients.length;
+    countEl.textContent = allDueToday.length>0 ? `${doneToday}/${allDueToday.length} done` : '';
+  }
+
+  if(upcomingClients.length===0){
+    upEl.innerHTML='<div class="empty"><div class="empty-icon">✅</div>All calls done for today!</div>';
+  } else {
+    // Show first 8, with a "show more" if there are more
+    const show = upcomingClients.slice(0,8);
+    const remaining = upcomingClients.length - show.length;
+    upEl.innerHTML = show.map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${freqLabel(c.freq).replace(/<[^>]+>/g,'')} · ${fmt(c.outstanding)}</div>
+        </div>
+        <button class="btn btn-blue" style="padding:4px 10px;font-size:11px;white-space:nowrap;margin-left:8px" onclick="openLogCall(${c.id})">Log call</button>
+      </div>`).join('') + (remaining>0?`<div style="text-align:center;padding:10px;font-size:12px;color:var(--blue);cursor:pointer" onclick="showPage('clients');document.querySelectorAll('.nav-btn')[2].classList.add('active')">+ ${remaining} more — view all in Clients →</div>`:'');
+  }
+
+  // ── No Answer Today ──
+  const naEl = document.getElementById('dash-no-answer');
+  const naCountEl = document.getElementById('no-answer-count');
+  if(naEl){
+    // Get all no-answer logs from today — coerce types to avoid mismatch
+    const noAnswerToday = callLogs.filter(l =>
+      l.outcome === 'no-answer' &&
+      new Date(l.date).toDateString() === todayStr
+    );
+    // Deduplicate by clientId — keep latest attempt per client
+    const seenNA = {};
+    [...noAnswerToday].sort((a,b)=>new Date(b.date)-new Date(a.date))
+      .forEach(l => { const cid = String(l.clientId); if(!seenNA[cid]) seenNA[cid]=l; });
+    const uniqueNA = Object.values(seenNA)
+      .filter(l => canInteract(clients.find(c=>String(c.id)===String(l.clientId))||{access:'staff'}));
+
+    if(naCountEl) naCountEl.textContent = uniqueNA.length > 0 ? uniqueNA.length + ' clients' : '';
+
+    if(uniqueNA.length === 0){
+      naEl.innerHTML = '<div class="empty"><div class="empty-icon">📞</div>No unanswered calls yet</div>';
+    } else {
+      const showNA = uniqueNA.slice(0,8);
+      const remNA = uniqueNA.length - showNA.length;
+      naEl.innerHTML = showNA.map(l => {
+        const c = clients.find(x => String(x.id) === String(l.clientId));
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c ? c.name : 'Unknown'}</div>
+            <div style="font-size:11px;color:var(--text2)">${fmtDateTime(l.date)} · ${l.userName}</div>
+          </div>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;white-space:nowrap;margin-left:8px" onclick="openLogCall(${l.clientId})">Retry</button>
+        </div>`;
+      }).join('') + (remNA > 0 ? `<div style="text-align:center;padding:8px;font-size:12px;color:var(--text2)">+${remNA} more</div>` : '');
+    }
+  }
+}
+
+// ── CLIENTS ──
+function renderClients(){
+  const search = (document.getElementById('client-search')||{value:''}).value.toLowerCase();
+  const freqF = (document.getElementById('filter-freq')||{value:''}).value;
+  const statusF = (document.getElementById('filter-status')||{value:''}).value;
+
+  document.getElementById('clients-sub').textContent = isPartner()
+    ? 'All clients — you have full access'
+    : 'Staff view — partner-only clients are view-only';
+  const wipeBtn = document.getElementById('wipe-btn');
+  if(wipeBtn) wipeBtn.style.display = isPartner() && clients.length > 0 ? 'inline-flex' : 'none';
+  const resetBtn = document.getElementById('reset-dates-btn');
+  if(resetBtn) resetBtn.style.display = isPartner() && clients.length > 0 ? 'inline-flex' : 'none';
+
+  let list = visibleClients().filter(c=>{
+    if(!c || !c.name || String(c.name).toLowerCase()==='null' || String(c.name).trim()==='') return false; // skip corrupted rows
+    if(search && !c.name.toLowerCase().includes(search) && !(c.contact||'').toLowerCase().includes(search)) return false;
+    if(freqF==='partner-only' && c.access!=='partner') return false;
+    if(freqF && freqF!=='partner-only' && c.freq!==freqF) return false;
+    if(statusF && getCallStatus(c)!==statusF) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('clients-tbody');
+  if(list.length===0){ tbody.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-icon">🔍</div>No clients found</div></td></tr>'; return; }
+
+  tbody.innerHTML = list.map(c=>{
+    const interact = canInteract(c);
+    const locked = !interact;
+    const isHighVal = (parseFloat(c.outstanding)||0) >= (settings.highValueThreshold||50000);
+    const isInactive = isClientInactive(c);
+    return `<tr class="${isHighVal?'priority-high':''}" style="${locked?'opacity:.6':''}">
+      <td>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-weight:500">${c.name}</span>
+          ${isHighVal?'<span class="priority-badge">High Value</span>':''}
+          ${isInactive?'<span class="inactive-badge">Inactive</span>':''}
+        </div>
+        <div style="font-size:12px;color:var(--text2)">${c.contact||''}${locked?' · <span style="color:var(--purple)">Partner access only</span>':''}</div>
+      </td>
+      <td><span style="font-family:var(--mono);font-weight:500">${fmt(c.outstanding)}</span></td>
+      <td>${freqLabel(c.freq)}</td>
+      <td style="font-size:12px">${fmtDate(c.nextDue)}</td>
+      <td style="font-size:12px">${fmtDate(c.lastCall)}</td>
+      <td>${callStatus(c)}</td>
+      <td>
+        ${interact?`
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="openDetail(${c.id})">View</button>
+          <button class="btn btn-green" style="padding:4px 10px;font-size:12px" onclick="openLogCall(${c.id})">Log call</button>
+        `:`<span class="tag">🔒 View only</span>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ADD/EDIT CLIENT ──
+function openAddClient(){
+  document.getElementById('edit-client-id').value = '';
+  document.getElementById('modal-client-title').textContent = 'Add New Client';
+  ['c-name','c-contact','c-email','c-phone','c-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-outstanding').value = '';
+  document.getElementById('c-access').value = 'staff';
+  document.getElementById('c-freq').value = '2x';
+  toggleFreq();
+  openModal('modal-client');
+}
+
+function openEditClient(id){
+  const c = clients.find(x=>x.id===id);
+  if(!c) return;
+  closeModal('modal-detail');
+  document.getElementById('edit-client-id').value = id;
+  document.getElementById('modal-client-title').textContent = 'Edit Client';
+  document.getElementById('c-name').value = c.name;
+  document.getElementById('c-contact').value = c.contact||'';
+  document.getElementById('c-email').value = c.email||'';
+  document.getElementById('c-phone').value = c.phone||'';
+  document.getElementById('c-outstanding').value = c.outstanding||'';
+  document.getElementById('c-access').value = c.access;
+  toggleFreq();
+  document.getElementById('c-freq').value = c.freq;
+  document.getElementById('c-notes').value = c.notes||'';
+  toggleFreq();
+  openModal('modal-client');
+}
+
+function toggleFreq(){
+  const access = document.getElementById('c-access').value;
+  // Always show freq — partners get partner-specific options
+  document.getElementById('freq-section').style.display = 'block';
+  const freq = document.getElementById('c-freq');
+  if(access==='partner'){
+    // Show only partner freq options
+    freq.innerHTML = `
+      <option value="p-1x">Weekly</option>
+      <option value="p-fn">Fortnightly</option>`;
+  } else {
+    freq.innerHTML = `
+      <option value="2x">Twice a week</option>
+      <option value="1x">Once a week</option>
+      <option value="fn">Once a fortnight</option>`;
+  }
+}
+
+function saveClient(){
+  const name = document.getElementById('c-name').value.trim();
+  if(!name) return toast('Client name is required');
+  const access = document.getElementById('c-access').value;
+  const freq = document.getElementById('c-freq').value;
+  const outstanding = Math.round((parseFloat(document.getElementById('c-outstanding').value)||0)*100)/100;
+  const editId = document.getElementById('edit-client-id').value;
+
+  if(editId){
+    const c = clients.find(x=>x.id==editId);
+    if(c){
+      c.name=name; c.contact=document.getElementById('c-contact').value;
+      c.email=document.getElementById('c-email').value; c.phone=document.getElementById('c-phone').value;
+      c.outstanding=outstanding; c.access=access; c.freq=freq;
+      c.notes=document.getElementById('c-notes').value;
+    }
+    toast('Client updated');
+  } else {
+    const nd = freq==='partner-only'?null:nextDueDate(freq);
+    clients.push({
+      id:nextClientId++, name, contact:document.getElementById('c-contact').value,
+      email:document.getElementById('c-email').value, phone:document.getElementById('c-phone').value,
+      outstanding, access, freq, notes:document.getElementById('c-notes').value,
+      nextDue:nd, lastCall:null
+    });
+    toast('Client added');
+  }
+  closeModal('modal-client');
+  renderClients();
+  renderDashboard();
+  saveToSheet();
+}
+
+// ── LOG CALL ──
+function openLogCall(clientId){
+  const c = clients.find(x=>x.id===clientId);
+  if(!c||!canInteract(c)) return toast('You do not have access to this client');
+  document.getElementById('call-client-id').value = clientId;
+  document.getElementById('call-client-name').value = c.name;
+  document.getElementById('call-date').value = new Date().toISOString().slice(0,16);
+  document.getElementById('use-realtime').checked = true;
+  document.getElementById('call-date').readOnly = true;
+  document.getElementById('call-date').style.background = 'var(--surface2)';
+  document.getElementById('call-outcome').value = 'contacted';
+  document.getElementById('call-notes').value = '';
+  renderNoteTemplates();
+  startRealtimeClock();
+  openModal('modal-call');
+}
+
+function saveCall(){
+  const clientId = parseInt(document.getElementById('call-client-id').value);
+  const c = clients.find(x=>x.id===clientId);
+  if(!c) return;
+  const outcome = document.getElementById('call-outcome').value;
+  const amountRecovered = outcome === 'paid' ? (parseFloat(document.getElementById('call-amount').value)||0) : 0;
+  if(outcome === 'paid' && amountRecovered <= 0) return toast('Please enter the amount recovered');
+  const log = {
+    id: nextCallId++, clientId,
+    userId: currentUser.id, userName: currentUser.name,
+    date: document.getElementById('call-date').value,
+    outcome,
+    amountRecovered,
+    notes: document.getElementById('call-notes').value
+  };
+  callLogs.unshift(log);
+  advanceNextDue(c);
+  stopRealtimeClock();
+  closeModal('modal-call');
+  saveToSheet();
+  toast('Call logged — visible to all partners and staff');
+  renderDashboard();
+  renderClients();
+  if(document.getElementById('page-calls').classList.contains('active')) renderCallLog();
+}
+
+function toggleAmountField(){
+  const outcome = document.getElementById('call-outcome').value;
+  document.getElementById('amount-recovered-field').style.display = outcome==='paid' ? 'block' : 'none';
+  if(outcome !== 'paid') document.getElementById('call-amount').value = '';
+}
+
+
+// ── REAL-TIME CLOCK ──
+let clockInterval = null;
+function startRealtimeClock(){
+  stopRealtimeClock();
+  function tick(){
+    const now = new Date();
+    const pad = n=>String(n).padStart(2,'0');
+    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const el = document.getElementById('live-clock');
+    if(el) el.textContent = timeStr;
+    const cb = document.getElementById('use-realtime');
+    if(cb && cb.checked){
+      const dateInput = document.getElementById('call-date');
+      if(dateInput) dateInput.value = now.toISOString().slice(0,16);
+    }
+  }
+  tick();
+  clockInterval = setInterval(tick, 1000);
+}
+function stopRealtimeClock(){
+  if(clockInterval){ clearInterval(clockInterval); clockInterval=null; }
+}
+function toggleRealtime(){
+  const cb = document.getElementById('use-realtime');
+  const dateInput = document.getElementById('call-date');
+  if(cb.checked){
+    dateInput.readOnly = true;
+    dateInput.style.background = 'var(--surface2)';
+    startRealtimeClock();
+  } else {
+    dateInput.readOnly = false;
+    dateInput.style.background = '';
+    stopRealtimeClock();
+    document.getElementById('live-clock').textContent = '';
+  }
+}
+
+// ── CALL LOG PAGE ──
+function filterCalls(f, btn){
+  callFilter = f;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderCallLog();
+}
+
+function renderCallLog(){
+  let logs = callFilter==='mine'
+    ? callLogs.filter(l=>l.userId===currentUser.id)
+    : callLogs;
+
+  // staff can't see calls on partner-only clients
+  if(!isPartner()){
+    const partnerClientIds = new Set(clients.filter(c=>c.access==='partner').map(c=>c.id));
+    logs = logs.filter(l=>!partnerClientIds.has(l.clientId));
+  }
+
+  const el = document.getElementById('call-log-container');
+  if(logs.length===0){ el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>No calls logged yet</div>'; return; }
+
+  el.innerHTML = logs.map(l=>{
+    const c = clients.find(x=>x.id===l.clientId);
+    const canDelete = isPartner() || l.userId === currentUser.id;
+    return `<div class="call-log-item" id="call-item-${l.id}">
+      <div class="call-dot"></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:500;font-size:13px">${c?c.name:'Unknown client'}</span>
+          <span style="font-size:12px;color:var(--text2)">${outcomeLabel(l.outcome)}</span>
+        </div>
+        <div class="call-log-meta">${fmtDateTime(l.date)} · Logged by <strong>${l.userName}</strong>${l.notes?' · '+l.notes:''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${c?`<span style="font-family:var(--mono);font-size:12px;color:var(--text2)">${fmt(c.outstanding)}</span>`:''}
+        ${canDelete?`<button class="btn btn-danger" style="padding:3px 10px;font-size:11px" onclick="deleteCallLog(${l.id})">Remove</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── CLIENT DETAIL ──
+function openDetail(id){
+  const c = clients.find(x=>x.id===id);
+  if(!c) return;
+  if(!canInteract(c)){ toast('This client is restricted to partners only'); return; }
+  document.getElementById('detail-name').textContent = c.name;
+  document.getElementById('detail-meta').innerHTML = `${c.contact||''}${c.email?' · '+c.email:''}${c.phone?' · '+c.phone:''}`;
+  document.getElementById('detail-outstanding').textContent = fmt(c.outstanding);
+  document.getElementById('detail-freq').innerHTML = freqLabel(c.freq);
+  document.getElementById('detail-next').textContent = c.nextDue?fmtDate(c.nextDue):'—';
+
+  const logs = callLogs.filter(l=>l.clientId===id);
+  const dc = document.getElementById('detail-calls');
+  if(logs.length===0){ dc.innerHTML='<div style="color:var(--text2);font-size:13px;padding:1rem 0">No calls logged yet</div>'; }
+  else {
+    dc.innerHTML = logs.map(l=>{
+      const canDelete = isPartner() || l.userId === currentUser.id;
+      return `<div class="call-log-item" id="call-item-${l.id}">
+        <div class="call-dot"></div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500">${outcomeLabel(l.outcome)}</div>
+          <div class="call-log-meta">${fmtDateTime(l.date)} · ${l.userName}${l.notes?' · '+l.notes:''}</div>
+        </div>
+        ${canDelete?`<button class="btn btn-danger" style="padding:3px 10px;font-size:11px" onclick="deleteCallLog(${l.id},${id})">Remove</button>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('detail-edit-btn').onclick = ()=>openEditClient(id);
+  document.getElementById('detail-call-btn').onclick = ()=>{ closeModal('modal-detail'); openLogCall(id); };
+  openModal('modal-detail');
+}
+
+// ── IMPORT ──
+let pendingImport = [];
+
+function dragOver(e){ e.preventDefault(); document.getElementById('drop-zone').classList.add('drag'); }
+function dragLeave(){ document.getElementById('drop-zone').classList.remove('drag'); }
+function dropFile(e){ e.preventDefault(); dragLeave(); const f=e.dataTransfer.files[0]; if(f) handleFile(f); }
+
+function handleFile(file){
+  if(!file) return;
+  const name = file.name.toLowerCase();
+  if(name.endsWith('.csv')){
+    const reader = new FileReader();
+    reader.onload = e => parseCSV(e.target.result, file.name);
+    reader.readAsText(file);
+  } else if(name.endsWith('.xlsx')||name.endsWith('.xls')){
+    toast('Excel import: please save as CSV from Practise for now, then re-upload.');
+  } else {
+    toast('Please upload a CSV file exported from Practise');
+  }
+}
+
+function parseCSV(text, filename){
+  const lines = text.trim().split('\n').filter(l=>l.trim());
+  if(lines.length<2){ toast('File appears empty'); return; }
+  const header = lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/['"]/g,''));
+  const nameIdx = header.findIndex(h=>h.includes('client')||h.includes('name'));
+  const amtIdx  = header.findIndex(h=>h.includes('outstanding')||h.includes('balance')||h.includes('amount'));
+
+  if(nameIdx===-1||amtIdx===-1){
+    // Try positional fallback
+    pendingImport = lines.slice(1).map(l=>{
+      const cols = l.split(',').map(c=>c.trim().replace(/['"]/g,''));
+      return {name:cols[0]||'', amount:parseFloat(cols[1])||0};
+    }).filter(r=>r.name && r.name.toLowerCase()!=='null' && r.name.trim()!=='');
+  } else {
+    pendingImport = lines.slice(1).map(l=>{
+      const cols = l.split(',').map(c=>c.trim().replace(/['"]/g,''));
+      return {name:cols[nameIdx]||'', amount:parseFloat(cols[amtIdx])||0};
+    }).filter(r=>r.name && r.name.toLowerCase()!=='null' && r.name.trim()!=='');
+  }
+
+  if(pendingImport.length===0){ toast('No valid records found in file'); return; }
+
+  document.getElementById('import-title').textContent = `Preview: ${pendingImport.length} records from "${filename}"`;
+  document.getElementById('import-tbody').innerHTML = pendingImport.map((r,i)=>{
+    const existing = findExistingClient(r.name);
+    const action = existing
+      ? `<span class="status status-due">Update: ${existing.name}</span>`
+      : `<span class="status status-ok">New client</span>`;
+    return `<tr><td>${r.name}</td><td style="font-family:var(--mono)">${fmt(r.amount)}</td><td>${action}</td></tr>`;
+  }).join('');
+  document.getElementById('import-preview').style.display = 'block';
+  document.getElementById('import-preview').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelImport(){
+  pendingImport = [];
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+// ── NAME NORMALISER for import matching ──
+function normaliseName(n){
+  // Only normalise whitespace and case — do NOT strip words
+  // Stripping words like pvt/ltd causes different clients to collide
+  return (n||'')
+    .toLowerCase()
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function findExistingClient(name){
+  const n = (name||'').toLowerCase().trim();
+  // 1. Exact case-insensitive match
+  let found = clients.find(c => c.name.toLowerCase().trim() === n);
+  if(found) return found;
+  // 2. Collapse internal whitespace only
+  const nws = n.replace(/\s+/g,' ');
+  found = clients.find(c => c.name.toLowerCase().trim().replace(/\s+/g,' ') === nws);
+  return found || null;
+}
+
+function confirmImport(){
+  let updated=0, added=0;
+  pendingImport.forEach(r=>{
+    const existing = findExistingClient(r.name);
+    if(existing){
+      existing.outstanding = Math.round((parseFloat(r.amount)||0)*100)/100;
+      updated++;
+    } else {
+      clients.push({
+        id:nextClientId++, name:r.name.trim(), contact:'', email:'', phone:'',
+        outstanding:Math.round((parseFloat(r.amount)||0)*100)/100,
+        access:'staff', freq:'1x', notes:'Imported from Practise',
+        nextDue:nextDueDate('1x'), lastCall:null
+      });
+      added++;
+    }
+  });
+
+  const record = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    user: currentUser.name,
+    total: pendingImport.length,
+    updated, added
+  };
+  importHistory.unshift(record);
+
+  toast(`Import complete — ${updated} updated, ${added} new clients added`);
+  cancelImport();
+  renderImportHistory();
+  saveToSheet();
+}
+
+function renderImportHistory(){
+  const el = document.getElementById('import-history');
+  if(importHistory.length===0){ el.innerHTML='<div style="color:var(--text2);font-size:13px">No imports yet</div>'; return; }
+  el.innerHTML = importHistory.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500">${fmtDateTime(r.date)}</div>
+        <div style="font-size:12px;color:var(--text2)">By ${r.user} · ${r.total} records · ${r.updated} updated · ${r.added} added</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="status status-ok">✓ Completed</span>
+        ${isPartner()?`<button class="btn btn-danger" style="padding:3px 10px;font-size:11px" onclick="deleteImport(${r.id})">Remove</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function deleteImport(id){
+  if(!confirm('Remove this import record? Note: this only removes the log entry — client balances already updated will not be reversed.')) return;
+  importHistory = importHistory.filter(r => r.id !== id);
+  saveToSheet();
+  renderImportHistory();
+  toast('Import record removed');
+}
+
+
+// ── LOGIN DROPDOWN ──
+function buildLoginDropdown(){
+  // Deduplicate by name+role before building dropdown
+  const seenKeys = {};
+  users = users.filter(u=>{
+    const key = u.name.trim().toLowerCase()+'|'+u.role;
+    if(seenKeys[key]) return false;
+    seenKeys[key] = true;
+    return true;
+  });
+  const sel = document.getElementById('login-user');
+  sel.innerHTML = '<option value="">— select user —</option>';
+  const partners = users.filter(u=>u.role==='partner');
+  const staff = users.filter(u=>u.role==='staff');
+  if(partners.length){
+    const og = document.createElement('optgroup'); og.label='Partners';
+    partners.forEach(u=>{ const o=document.createElement('option'); o.value=u.id; o.textContent=u.name+' (Partner)'; og.appendChild(o); });
+    sel.appendChild(og);
+  }
+  if(staff.length){
+    const og = document.createElement('optgroup'); og.label='Staff';
+    staff.forEach(u=>{ const o=document.createElement('option'); o.value=u.id; o.textContent=u.name+' (Staff)'; og.appendChild(o); });
+    sel.appendChild(og);
+  }
+  // Hide spinner, show form
+  const loading = document.getElementById('login-loading');
+  const form = document.getElementById('login-form');
+  if(loading) loading.style.display = 'none';
+  if(form) form.style.display = 'block';
+}
+// ── CACHE-FIRST USER LOAD ──
+// Load from localStorage instantly, then refresh from sheet in background
+(async()=>{
+  // Step 1: Try cache first — instant display
+  try {
+    const cached = localStorage.getItem('feetrack_users');
+    if(cached){
+      users = JSON.parse(cached);
+      buildLoginDropdown(); // show immediately from cache
+    }
+  } catch(e){}
+
+  // Step 2: Fetch from sheet in background
+  try{
+    const res = await fetch(SCRIPT_URL, {method:'GET', redirect:'follow'});
+    const data = await res.json();
+    if(data.status==='ok' && data.users && data.users.length){
+      users = data.users;
+      localStorage.setItem('feetrack_users', JSON.stringify(users));
+      nextUserId = users.length ? Math.max(...users.map(u=>parseInt(u.id.replace(/[^0-9]/g,''))||0))+1 : 1;
+    }
+  } catch(e){}
+
+  // Always rebuild dropdown with latest (whether from cache or sheet)
+  buildLoginDropdown();
+})();
+
+// ── USER MANAGEMENT ──
+function renderUsers(){
+  if(!isPartner()) return;
+  // Auto-dedup silently on every render (safety net)
+  const seenKeys = {};
+  users = users.filter(u=>{
+    const key = u.name.trim().toLowerCase()+'|'+u.role;
+    if(seenKeys[key]) return false;
+    seenKeys[key] = true;
+    return true;
+  });
+  const partners = users.filter(u=>u.role==='partner');
+  const staff = users.filter(u=>u.role==='staff');
+  const renderList = (list, elId) => {
+    const el = document.getElementById(elId);
+    if(list.length===0){ el.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">None added yet</div>'; return; }
+    el.innerHTML = list.map(u=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar avatar-${u.role}" style="width:34px;height:34px;font-size:12px">${u.initials}</div>
+          <div>
+            <div style="font-weight:500;font-size:13px">${u.name}</div>
+            <div style="font-size:12px;color:var(--text2)">${u.email||'No email'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="openEditUser('${u.id}')">Edit</button>
+          ${u.id===currentUser.id?'<span class="tag">You</span>':`<button class="btn btn-danger" style="padding:4px 10px;font-size:12px" onclick="deleteUser('${u.id}')">Remove</button>`}
+        </div>
+      </div>`).join('');
+  };
+  renderList(partners,'users-partners-list');
+  renderList(staff,'users-staff-list');
+}
+
+function openAddUser(){
+  document.getElementById('edit-user-id').value='';
+  document.getElementById('modal-user-title').textContent='Add User';
+  document.getElementById('u-first').value='';
+  document.getElementById('u-last').value='';
+  document.getElementById('u-role').value='staff';
+  document.getElementById('u-email').value='';
+  openModal('modal-user');
+}
+
+function openEditUser(id){
+  const u=users.find(x=>x.id===id);
+  if(!u) return;
+  document.getElementById('edit-user-id').value=id;
+  document.getElementById('modal-user-title').textContent='Edit User';
+  const parts=u.name.split(' ');
+  document.getElementById('u-first').value=parts[0]||'';
+  document.getElementById('u-last').value=parts.slice(1).join(' ')||'';
+  document.getElementById('u-role').value=u.role;
+  document.getElementById('u-email').value=u.email||'';
+  openModal('modal-user');
+}
+
+function saveUser(){
+  const first=document.getElementById('u-first').value.trim();
+  const last=document.getElementById('u-last').value.trim();
+  if(!first||!last) return toast('First and last name are required');
+  const role=document.getElementById('u-role').value;
+  const email=document.getElementById('u-email').value.trim();
+  const name=first+' '+last;
+  const initials=(first[0]+(last[0]||'')).toUpperCase();
+  const editId=document.getElementById('edit-user-id').value;
+  if(editId){
+    const u=users.find(x=>x.id===editId);
+    if(u){ u.name=name; u.role=role; u.email=email; u.initials=initials; }
+    // if editing self, update topbar
+    if(editId===currentUser.id){
+      currentUser.name=name; currentUser.role=role; currentUser.initials=initials;
+      document.getElementById('user-name').textContent=name;
+      document.getElementById('user-avatar').textContent=initials;
+    }
+    toast('User updated');
+  } else {
+    // Use timestamp for truly unique, stable ID
+    const id = role+'-'+first.toLowerCase().replace(/[^a-z]/g,'')+'-'+Date.now();
+    // Guard: don't add if a user with same name+role already exists
+    const duplicate = users.find(u=>u.name.toLowerCase()===name.toLowerCase()&&u.role===role);
+    if(duplicate){ toast('A user with this name and role already exists'); return; }
+    users.push({id, name, role, initials, email});
+    nextUserId++;
+    toast('User added — they can now sign in');
+  }
+  try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
+  buildLoginDropdown();  // always rebuild login dropdown with updated names
+  closeModal('modal-user');
+  renderUsers();
+  saveToSheet();
+}
+
+function cleanDuplicateUsers(){
+  const before = users.length;
+  // Keep only the LAST entry per name+role combination
+  const seen = {};
+  const reversed = [...users].reverse();
+  reversed.forEach(u => {
+    const key = u.name.trim().toLowerCase() + '|' + u.role;
+    if(!seen[key]) seen[key] = u;
+  });
+  users = Object.values(seen);
+
+  // Also deduplicate by id (catch any id-based dupes)
+  const seenIds = {};
+  users.forEach(u => { seenIds[u.id] = u; });
+  users = Object.values(seenIds);
+
+  const removed = before - users.length;
+  if(removed === 0){
+    toast('No duplicates found — users are already clean ✓');
+    return;
+  }
+
+  // Save cleaned list
+  try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
+  buildLoginDropdown();
+  renderUsers();
+  saveToSheet();
+
+  const alert = document.getElementById('dupes-alert');
+  if(alert){
+    alert.style.display = 'flex';
+    alert.textContent = `✓ Removed ${removed} duplicate user${removed!==1?'s':''}. Login screen is now clean.`;
+    setTimeout(()=>{ alert.style.display='none'; }, 5000);
+  }
+  toast(`Removed ${removed} duplicate${removed!==1?'s':''} and saved ✓`);
+}
+
+function deleteUser(id){
+  if(id===currentUser.id) return toast('You cannot remove yourself');
+  if(users.length<=1) return toast('At least one user must remain');
+  users=users.filter(u=>u.id!==id);
+  buildLoginDropdown();
+  renderUsers();
+  saveToSheet();
+  toast('User removed');
+}
+
+
+// ── GOOGLE SHEETS SYNC ──
+function showLoader(msg){
+  const o=document.getElementById('loading-overlay');
+  o.style.display='flex';
+  document.getElementById('loading-msg').textContent=msg||'Syncing with Google Sheets…';
+}
+function hideLoader(){ document.getElementById('loading-overlay').style.display='none'; }
+
+function calcNextIds(){
+  nextClientId = clients.length ? Math.max(...clients.map(c=>Number(c.id)||0))+1 : 1;
+  nextCallId   = callLogs.length ? Math.max(...callLogs.map(c=>Number(c.id)||0))+1 : 1;
+}
+
+// ── TYPE SANITISERS ──
+// Google Sheets returns everything as strings — coerce back to correct types
+function sanitiseClients(arr){
+  const INVALID_NAMES = ['null','name','client','clientname','client name',''];
+  return (arr||[])
+    .filter(c => {
+      if(!c) return false;
+      const n = String(c.name||'').trim().toLowerCase();
+      if(INVALID_NAMES.includes(n)) return false; // skip header rows & null rows
+      if(!c.id || String(c.id).toLowerCase()==='id') return false; // skip header row
+      return true;
+    })
+    .map(c=>({
+      ...c,
+      id:          Number(c.id) || c.id,
+      name:        String(c.name).trim(),
+      outstanding: Math.round((parseFloat(c.outstanding)||0)*100)/100,
+      nextDue:     (c.nextDue && String(c.nextDue)!=='null')  ? c.nextDue  : null,
+      lastCall:    (c.lastCall && String(c.lastCall)!=='null') ? c.lastCall : null,
+      freq:        (c.freq && String(c.freq)!=='null' && String(c.freq)!=='freq') ? c.freq : '1x',
+      access:      (c.access && String(c.access)!=='null' && String(c.access)!=='access') ? c.access : 'staff',
+    }));
+}
+function sanitiseCallLogs(arr){
+  return (arr||[]).map(l=>({
+    ...l,
+    id:              Number(l.id) || l.id,
+    clientId:        Number(l.clientId),
+    amountRecovered: Math.round((parseFloat(l.amountRecovered)||0)*100)/100,
+    date:            l.date || null,
+  }));
+}
+
+async function loadFromSheet(){
+  isLoading = true;
+  showLoader('Loading data from Firebase…');
+  try {
+    const data = await fbGet('feetrack');
+    if(data){
+      if(data.users){
+        const arr = Object.values(data.users);
+        const seen = {};
+        arr.forEach(u=>{ seen[u.id]=u; });
+        users = Object.values(seen);
+        try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
+      }
+      if(data.clients){
+        clients = sanitiseClients(Object.values(data.clients));
+      }
+      if(data.callLogs){
+        callLogs = sanitiseCallLogs(Object.values(data.callLogs));
+      }
+      if(data.importHistory){
+        importHistory = Object.values(data.importHistory);
+      }
+      if(data.settings){
+        try{ Object.assign(settings, data.settings); }catch(e){}
+      }
+      calcNextIds();
+      buildLoginDropdown();
+    }
+  } catch(e){
+    toast('Could not reach Firebase — working offline');
+  }
+  hideLoader();
+  isLoading = false;
+  renderDashboard();
+}
+
+async function emergencySave(){
+  const btn = document.getElementById('emergency-save-btn');
+  if(btn){ btn.textContent = '💾 Saving…'; btn.disabled = true; }
+  try {
+    await fbSet('feetrack/users',         toFbObj(users));
+    await fbSet('feetrack/clients',       toFbObj(clients));
+    await fbSet('feetrack/callLogs',      toFbObj(callLogs));
+    await fbSet('feetrack/importHistory', toFbObj(importHistory, 'id'));
+    await fbSet('feetrack/settings',      settings);
+    toast('✅ All data saved to Firebase successfully!');
+    if(btn){ btn.textContent = '✅ Saved!'; }
+    setTimeout(()=>{ if(btn){ btn.textContent='💾 Save Now'; btn.disabled=false; } }, 3000);
+  } catch(e){
+    toast('❌ Save failed — check your connection');
+    if(btn){ btn.textContent='💾 Save Now'; btn.disabled=false; }
+  }
+}
+
+// ── FIREBASE SAVE HELPERS ──
+// Convert array to Firebase object keyed by id
+function toFbObj(arr, keyField='id'){
+  const obj = {};
+  (arr||[]).forEach((item,i) => {
+    const key = String(item[keyField]||i).replace(/[.#$\[\]]/g,'_');
+    obj[key] = item;
+  });
+  return obj;
+}
+
+let saveTimer = null;
+function saveToSheet(){
+  if(isLoading) return;
+  clearTimeout(saveTimer);
+  setSyncStatus('pending');
+  saveTimer = setTimeout(async ()=>{
+    setSyncStatus('syncing');
+    try {
+      // Save each collection separately — atomic, no corruption
+      await fbSet('feetrack/users',         toFbObj(users));
+      await fbSet('feetrack/clients',       toFbObj(clients));
+      await fbSet('feetrack/callLogs',      toFbObj(callLogs));
+      await fbSet('feetrack/importHistory', toFbObj(importHistory, 'id'));
+      await fbSet('feetrack/settings',      settings);
+      setSyncStatus('saved');
+    } catch(e){
+      setSyncStatus('error');
+    }
+  }, 800);
+}
+
+function setSyncStatus(status){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  const map = {
+    pending: {text:'Saving…',   color:'var(--text3)'},
+    syncing: {text:'Syncing ↑', color:'var(--amber)'},
+    saved:   {text:'Saved ✓',   color:'var(--green)'},
+    error:   {text:'Sync failed ✗', color:'var(--red)'},
+  };
+  const s = map[status]||map.saved;
+  el.textContent = s.text;
+  el.style.color = s.color;
+  if(status==='saved') setTimeout(()=>{ el.textContent=''; }, 3000);
+}
+
+
+
+// ── RECOVERY PAGE ──
+let recoveryFilter = 'all';
+function filterRecovery(f, btn){
+  recoveryFilter = f;
+  document.querySelectorAll('#page-recovery .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderRecovery();
+}
+
+function renderRecovery(){
+  const now = new Date();
+  const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate()-now.getDay()); startOfWeek.setHours(0,0,0,0);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  let logs = callLogs.filter(l=>l.outcome==='paid' && (+l.amountRecovered||0)>0);
+
+  // filter by partner access for staff
+  if(!isPartner()){
+    const pids = new Set(clients.filter(c=>c.access==='partner').map(c=>c.id));
+    logs = logs.filter(l=>!pids.has(l.clientId));
+  }
+
+  if(recoveryFilter==='week')  logs = logs.filter(l=>new Date(l.date)>=startOfWeek);
+  if(recoveryFilter==='month') logs = logs.filter(l=>new Date(l.date)>=startOfMonth);
+
+  const total = logs.reduce((s,l)=>s+(+l.amountRecovered||0),0);
+  const thisMonth = callLogs.filter(l=>l.outcome==='paid'&&new Date(l.date)>=startOfMonth).reduce((s,l)=>s+(+l.amountRecovered||0),0);
+  const thisWeek  = callLogs.filter(l=>l.outcome==='paid'&&new Date(l.date)>=startOfWeek).reduce((s,l)=>s+(+l.amountRecovered||0),0);
+
+  document.getElementById('recovery-metrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">All time recovered</div><div class="metric-value" style="color:var(--green)">${fmt(callLogs.filter(l=>l.outcome==='paid').reduce((s,l)=>s+(+l.amountRecovered||0),0))}</div></div>
+    <div class="metric-card"><div class="metric-label">This month</div><div class="metric-value" style="color:var(--blue)">${fmt(thisMonth)}</div></div>
+    <div class="metric-card"><div class="metric-label">This week</div><div class="metric-value" style="color:var(--amber)">${fmt(thisWeek)}</div></div>
+  `;
+
+  const tbody = document.getElementById('recovery-tbody');
+  if(logs.length===0){
+    tbody.innerHTML='<tr><td colspan="5"><div class="empty"><div class="empty-icon">💰</div>No payments recorded yet</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = logs.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(l=>{
+    const c = clients.find(x=>x.id==l.clientId);
+    return `<tr>
+      <td><span style="font-weight:500">${c?c.name:'Unknown'}</span></td>
+      <td><span style="font-family:var(--mono);font-weight:600;color:var(--green)">${fmt(+l.amountRecovered||0)}</span></td>
+      <td>${l.userName}</td>
+      <td style="font-size:12px">${fmtDateTime(l.date)}</td>
+      <td style="font-size:12px;color:var(--text2)">${l.notes||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── DELETE CALL LOG ──
+function deleteCallLog(callId, reopenClientId){
+  if(!confirm('Remove this call log? This cannot be undone.')) return;
+  callLogs = callLogs.filter(l => l.id !== callId);
+  saveToSheet();
+  toast('Call log removed');
+  // Refresh wherever we are
+  if(reopenClientId){
+    openDetail(reopenClientId);
+  } else {
+    renderCallLog();
+  }
+  renderDashboard();
+}
+
+
+// ── WIPE CLIENTS ──
+function confirmWipeClients(){
+  if(!isPartner()) return toast('Only partners can wipe the client list');
+  document.getElementById('wipe-count').textContent = clients.length + ' client' + (clients.length===1?'':'s');
+  document.getElementById('wipe-confirm-input').value = '';
+  document.getElementById('wipe-confirm-btn').disabled = true;
+  openModal('modal-wipe');
+}
+
+function checkWipeInput(){
+  const val = document.getElementById('wipe-confirm-input').value.trim().toUpperCase();
+  document.getElementById('wipe-confirm-btn').disabled = val !== 'WIPE';
+}
+
+function executeWipe(){
+  clients = [];
+  callLogs = callLogs.filter(l => false); // wipe all call logs too
+  nextClientId = 1;
+  nextCallId = 1;
+  closeModal('modal-wipe');
+  saveToSheet();
+  renderClients();
+  renderDashboard();
+  toast('All clients and call logs have been wiped');
+}
+
+
+// ── INACTIVITY CHECK ──
+function isClientInactive(c){
+  if(!c.lastCall) return true;
+  const days = settings.inactivityDays[c.freq];
+  if(!days) return false;
+  const diff = (new Date() - new Date(c.lastCall)) / (1000*60*60*24);
+  return diff > days;
+}
+
+// ── NOTIFICATIONS / REMINDERS ──
+function buildNotifications(){
+  const notifs = [];
+  const now = new Date();
+  clients.forEach(c=>{
+    if(!canInteract(c)) return;
+    // Call reminder
+    if(c.nextDue){
+      const due = new Date(c.nextDue);
+      const minsUntil = (due - now)/60000;
+      if(minsUntil >= 0 && minsUntil <= (settings.callReminderMinutes||60)){
+        notifs.push({type:'reminder', msg:`📞 Call due soon: ${c.name}`, clientId:c.id});
+      }
+    }
+    // Inactivity
+    if(isClientInactive(c)){
+      notifs.push({type:'inactive', msg:`😴 No recent contact: ${c.name}`, clientId:c.id});
+    }
+    // High value overdue
+    if((parseFloat(c.outstanding)||0) >= (settings.highValueThreshold||50000) && getCallStatus(c)==='overdue'){
+      notifs.push({type:'highvalue', msg:`⚡ High value overdue: ${c.name} — ${fmt(c.outstanding)}`, clientId:c.id});
+    }
+  });
+  const dot = document.getElementById('bell-dot');
+  const list = document.getElementById('notif-list');
+  if(dot) dot.style.display = notifs.length ? 'block' : 'none';
+  if(list){
+    list.innerHTML = notifs.length
+      ? notifs.map(n=>`<div class="notif-item" onclick="closeNotifPanel();openDetail(${n.clientId})">${n.msg}</div>`).join('')
+      : '<div style="padding:16px;font-size:12px;color:var(--text2);text-align:center">No alerts right now ✓</div>';
+  }
+  return notifs;
+}
+
+function toggleNotifPanel(){
+  buildNotifications();
+  document.getElementById('notif-panel').classList.toggle('open');
+}
+function closeNotifPanel(){
+  document.getElementById('notif-panel').classList.remove('open');
+}
+document.addEventListener('click', e=>{
+  const panel = document.getElementById('notif-panel');
+  const btn = document.getElementById('bell-btn');
+  if(panel && btn && !panel.contains(e.target) && !btn.contains(e.target)){
+    panel.classList.remove('open');
+  }
+});
+
+// ── NOTE TEMPLATES ──
+function renderNoteTemplates(){
+  const row = document.getElementById('note-templates-row');
+  if(!row) return;
+  row.innerHTML = (settings.noteTemplates||[]).map(t=>
+    `<span class="template-chip" onclick="applyTemplate('${t.replace(/'/g,"\'")}')">${t}</span>`
+  ).join('');
+}
+function applyTemplate(t){
+  document.getElementById('call-notes').value = t;
+}
+
+// ── REPORTS ──
+let currentReportTab = 'ageing';
+function switchReportTab(tab, btn){
+  currentReportTab = tab;
+  document.querySelectorAll('#page-reports .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderReport();
+}
+
+function renderReport(){
+  const el = document.getElementById('report-content');
+  if(!el) return;
+  if(currentReportTab==='ageing')       el.innerHTML = buildAgeingReport();
+  if(currentReportTab==='performance')  el.innerHTML = buildPerformanceReport();
+  if(currentReportTab==='inactivity')   el.innerHTML = buildInactivityReport();
+  if(currentReportTab==='highvalue')    el.innerHTML = buildHighValueReport();
+}
+
+function ageingBracket(c){
+  if(!c.lastCall && !c.nextDue) return '90+';
+  const ref = c.lastCall || c.nextDue;
+  const days = (new Date()-new Date(ref))/(1000*60*60*24);
+  if(days<=30) return '0-30';
+  if(days<=60) return '31-60';
+  if(days<=90) return '61-90';
+  return '90+';
+}
+function ageingColor(b){ return {' 0-30':'var(--green)','31-60':'var(--amber)','61-90':'var(--red)','90+':'#7B0000'}[b]||'var(--text2)'; }
+
+function buildAgeingReport(){
+  const list = clients.filter(c=>canInteract(c));
+  if(!list.length) return '<div class="empty"><div class="empty-icon">📊</div>No clients yet</div>';
+  const brackets = {'0-30':[],'31-60':[],'61-90':[],'90+':[]};
+  list.forEach(c=>{ const b=ageingBracket(c); if(brackets[b]) brackets[b].push(c); });
+  let html = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">`;
+  Object.entries(brackets).forEach(([b,arr])=>{
+    const tot = arr.reduce((s,c)=>s+(parseFloat(c.outstanding)||0),0);
+    html+=`<div class="metric-card"><div class="metric-label">${b} days</div><div class="metric-value" style="font-size:18px;color:${ageingColor(b)}">${fmt(tot)}</div><div class="metric-sub">${arr.length} client${arr.length!==1?'s':''}</div></div>`;
+  });
+  html+=`</div><div class="card" style="padding:0"><div class="table-wrap"><table><thead><tr><th>Client</th><th>Outstanding</th><th>Last Contact</th><th>Ageing</th><th>Days Outstanding</th></tr></thead><tbody>`;
+  list.sort((a,b)=>(parseFloat(b.outstanding)||0)-(parseFloat(a.outstanding)||0)).forEach(c=>{
+    const b=ageingBracket(c);
+    const days = c.lastCall ? Math.floor((new Date()-new Date(c.lastCall))/(1000*60*60*24)) : '—';
+    const pct = typeof days==='number' ? Math.min(days/90*100,100) : 100;
+    html+=`<tr><td><span style="font-weight:500">${c.name}</span></td><td style="font-family:var(--mono);font-weight:500">${fmt(c.outstanding)}</td><td style="font-size:12px">${fmtDate(c.lastCall)}</td><td><span style="font-size:11px;font-weight:600;color:${ageingColor(b)}">${b} days</span></td><td style="min-width:120px"><div style="font-size:12px">${days} days</div><div class="ageing-bar"><div class="ageing-fill" style="width:${pct}%;background:${ageingColor(b)}"></div></div></td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  return html;
+}
+
+function buildPerformanceReport(){
+  const staff = users.filter(u=>u.role==='staff'||u.role==='partner');
+  if(!staff.length) return '<div class="empty">No users yet</div>';
+  let html=`<div class="card" style="padding:0"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Total Calls</th><th>Payments Logged</th><th>Amount Recovered</th><th>Last Activity</th></tr></thead><tbody>`;
+  staff.forEach(u=>{
+    const myCalls = callLogs.filter(l=>l.userId===u.id);
+    const paid = myCalls.filter(l=>l.outcome==='paid');
+    const recovered = paid.reduce((s,l)=>s+(parseFloat(l.amountRecovered)||0),0);
+    const lastDate = myCalls.length ? myCalls.sort((a,b)=>new Date(b.date)-new Date(a.date))[0].date : null;
+    html+=`<tr><td style="font-weight:500">${u.name}</td><td><span class="role-badge badge-${u.role}">${u.role}</span></td><td style="font-family:var(--mono)">${myCalls.length}</td><td style="font-family:var(--mono)">${paid.length}</td><td style="font-family:var(--mono);color:var(--green)">${fmt(recovered)}</td><td style="font-size:12px">${fmtDate(lastDate)}</td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  return html;
+}
+
+function buildInactivityReport(){
+  const inactive = clients.filter(c=>canInteract(c)&&isClientInactive(c));
+  if(!inactive.length) return `<div class="empty"><div class="empty-icon">✅</div>No inactive clients — great work!</div>`;
+  let html=`<div class="alert alert-warning" style="margin-bottom:16px">⚠️ ${inactive.length} client${inactive.length!==1?'s':''} have not been contacted within their required frequency.</div>`;
+  html+=`<div class="card" style="padding:0"><div class="table-wrap"><table><thead><tr><th>Client</th><th>Outstanding</th><th>Frequency</th><th>Last Call</th><th>Days Since Contact</th><th></th></tr></thead><tbody>`;
+  inactive.forEach(c=>{
+    const days = c.lastCall ? Math.floor((new Date()-new Date(c.lastCall))/(1000*60*60*24)) : 'Never';
+    html+=`<tr><td><span style="font-weight:500">${c.name}</span></td><td style="font-family:var(--mono)">${fmt(c.outstanding)}</td><td>${freqLabel(c.freq).replace(/<[^>]+>/g,'')}</td><td style="font-size:12px">${fmtDate(c.lastCall)}</td><td><span style="color:var(--red);font-weight:500">${days}${typeof days==='number'?' days':''}</span></td><td><button class="btn btn-green" style="padding:4px 10px;font-size:11px" onclick="openLogCall(${c.id})">Log call</button></td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  return html;
+}
+
+function buildHighValueReport(){
+  const threshold = settings.highValueThreshold||50000;
+  const hv = clients.filter(c=>canInteract(c)&&(parseFloat(c.outstanding)||0)>=threshold);
+  if(!hv.length) return `<div class="empty"><div class="empty-icon">💰</div>No clients above ₹${threshold.toLocaleString('en-IN')} threshold</div>`;
+  let html=`<div class="alert alert-info" style="margin-bottom:16px">⚡ ${hv.length} client${hv.length!==1?'s':''} exceed the high value threshold of ${fmt(threshold)}.</div>`;
+  html+=`<div class="card" style="padding:0"><div class="table-wrap"><table><thead><tr><th>Client</th><th>Outstanding</th><th>Status</th><th>Last Call</th><th>Next Due</th><th></th></tr></thead><tbody>`;
+  hv.sort((a,b)=>(parseFloat(b.outstanding)||0)-(parseFloat(a.outstanding)||0)).forEach(c=>{
+    html+=`<tr class="priority-high"><td><span style="font-weight:500">${c.name}</span><span class="priority-badge" style="margin-left:6px">High Value</span></td><td style="font-family:var(--mono);font-weight:600;color:var(--red)">${fmt(c.outstanding)}</td><td>${callStatus(c)}</td><td style="font-size:12px">${fmtDate(c.lastCall)}</td><td style="font-size:12px">${fmtDate(c.nextDue)}</td><td><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="openDetail(${c.id})">View</button></td></tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  return html;
+}
+
+// ── SETTINGS PAGE ──
+function renderSettings(){
+  if(!isPartner()) return;
+  document.getElementById('setting-reminder').value = settings.callReminderMinutes||60;
+  document.getElementById('setting-highvalue').value = settings.highValueThreshold||50000;
+  document.getElementById('set-inact-2x').value  = settings.inactivityDays['2x']||4;
+  document.getElementById('set-inact-1x').value  = settings.inactivityDays['1x']||8;
+  document.getElementById('set-inact-fn').value  = settings.inactivityDays['fn']||16;
+  document.getElementById('set-inact-p1x').value = settings.inactivityDays['p-1x']||8;
+  renderTemplatesList();
+}
+
+function renderTemplatesList(){
+  const el = document.getElementById('templates-list');
+  if(!el) return;
+  el.innerHTML = (settings.noteTemplates||[]).map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-size:13px">${t}</span>
+      <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="editTemplate(${i})">Edit</button>
+      <button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="removeTemplate(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addTemplate(){
+  const val = document.getElementById('new-template-input').value.trim();
+  if(!val) return toast('Enter a template text first');
+  settings.noteTemplates.push(val);
+  document.getElementById('new-template-input').value='';
+  renderTemplatesList();
+  toast('Template added');
+}
+
+function editTemplate(i){
+  const val = prompt('Edit template:', settings.noteTemplates[i]);
+  if(val && val.trim()){ settings.noteTemplates[i]=val.trim(); renderTemplatesList(); }
+}
+
+function removeTemplate(i){
+  settings.noteTemplates.splice(i,1);
+  renderTemplatesList();
+}
+
+function saveSettings(){
+  settings.callReminderMinutes = parseInt(document.getElementById('setting-reminder').value)||60;
+  settings.highValueThreshold  = parseFloat(document.getElementById('setting-highvalue').value)||50000;
+  settings.inactivityDays['2x']  = parseInt(document.getElementById('set-inact-2x').value)||4;
+  settings.inactivityDays['1x']  = parseInt(document.getElementById('set-inact-1x').value)||8;
+  settings.inactivityDays['fn']  = parseInt(document.getElementById('set-inact-fn').value)||16;
+  settings.inactivityDays['p-1x']= parseInt(document.getElementById('set-inact-p1x').value)||8;
+  saveToSheet();
+  toast('Settings saved ✓');
+}
+
+
+// ── RESET DUE DATES ──
+function confirmResetDueDates(){
+  if(!isPartner()) return toast('Only partners can reset due dates');
+  openModal('modal-reset-dates');
+}
+
+function executeResetDueDates(){
+  // Set to 23:59 today so it shows as "Due Today" all day long
+  const endOfToday = new Date();
+  endOfToday.setHours(23,59,0,0);
+  const today = endOfToday.toISOString().slice(0,16);
+  clients.forEach(c => {
+    if(c.freq && c.freq !== 'partner-only'){
+      c.nextDue = today;
+    }
+  });
+  saveToSheet();
+  closeModal('modal-reset-dates');
+  renderClients();
+  renderDashboard();
+  toast('All due dates reset to today ✓');
+}
+
+// ── MODAL ──
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+</script>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(247,246,242,0.92);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div id="loading-spinner" style="width:36px;height:36px;border:3px solid #E2DDD4;border-top-color:#1C1B18;border-radius:50%;animation:spin .7s linear infinite"></div>
+  <div id="loading-msg" style="font-size:13px;color:#6B6860;font-family:'DM Sans',sans-serif">Syncing with Google Sheets…</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</body>
+</html>
