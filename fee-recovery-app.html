@@ -192,6 +192,19 @@
       </div>
       <button class="btn btn-primary btn-full" onclick="doLogin()">Continue</button>
     </div>
+
+    <!-- First time setup — shown when no users in Firebase -->
+    <div id="login-setup" style="display:none">
+      <div class="alert alert-info" style="margin-bottom:16px;text-align:left">
+        👋 First time setup — add your first Partner account to get started.
+      </div>
+      <div class="form-row">
+        <div class="field"><label>First name *</label><input id="setup-first" placeholder="e.g. Rupasri"></div>
+        <div class="field"><label>Last name *</label><input id="setup-last" placeholder="e.g. Vakati"></div>
+      </div>
+      <div class="field"><label>Email (optional)</label><input id="setup-email" type="email" placeholder="email@vakati.com"></div>
+      <button class="btn btn-primary btn-full" onclick="doFirstSetup()">Create Partner Account & Continue</button>
+    </div>
   </div>
 </div>
 
@@ -741,6 +754,26 @@ function isPartner(){ return currentUser && currentUser.role === 'partner'; }
 function seedData(){ /* data loaded from sheet */ }
 
 // ── AUTH ──
+async function doFirstSetup(){
+  const first = document.getElementById('setup-first').value.trim();
+  const last  = document.getElementById('setup-last').value.trim();
+  const email = document.getElementById('setup-email').value.trim();
+  if(!first || !last) return toast('Please enter first and last name');
+  const name = first + ' ' + last;
+  const initials = (first[0] + last[0]).toUpperCase();
+  const id = 'partner-' + first.toLowerCase().replace(/[^a-z]/g,'') + '-' + Date.now();
+  users.push({id, name, role:'partner', initials, email});
+  // Save to Firebase immediately
+  try{
+    await fbSet('feetrack/users', toFbObj(users));
+    try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
+    toast('Account created! You can now sign in.');
+    buildLoginDropdown();
+  } catch(e){
+    toast('Could not save — check your connection');
+  }
+}
+
 function doLogin(){
   const sel = document.getElementById('login-user').value;
   if(!sel) return toast('Please select a user');
@@ -1456,11 +1489,23 @@ function buildLoginDropdown(){
     staff.forEach(u=>{ const o=document.createElement('option'); o.value=u.id; o.textContent=u.name+' (Staff)'; og.appendChild(o); });
     sel.appendChild(og);
   }
-  // Hide spinner, show form
+  // Hide spinner
   const loading = document.getElementById('login-loading');
-  const form = document.getElementById('login-form');
   if(loading) loading.style.display = 'none';
-  if(form) form.style.display = 'block';
+
+  if(users.length === 0){
+    // No users — show first time setup
+    const setup = document.getElementById('login-setup');
+    const form = document.getElementById('login-form');
+    if(setup) setup.style.display = 'block';
+    if(form) form.style.display = 'none';
+  } else {
+    // Show login form
+    const setup = document.getElementById('login-setup');
+    const form = document.getElementById('login-form');
+    if(setup) setup.style.display = 'none';
+    if(form) form.style.display = 'block';
+  }
 }
 // ── CACHE-FIRST USER LOAD ──
 // Load from localStorage instantly, then refresh from sheet in background
