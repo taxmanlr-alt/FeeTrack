@@ -196,14 +196,9 @@
     <!-- First time setup — shown when no users in Firebase -->
     <div id="login-setup" style="display:none">
       <div class="alert alert-info" style="margin-bottom:16px;text-align:left">
-        👋 First time setup — add your first Partner account to get started.
+        👋 First time setup — click below to load all users.
       </div>
-      <div class="form-row">
-        <div class="field"><label>First name *</label><input id="setup-first" placeholder="e.g. Rupasri"></div>
-        <div class="field"><label>Last name *</label><input id="setup-last" placeholder="e.g. Vakati"></div>
-      </div>
-      <div class="field"><label>Email (optional)</label><input id="setup-email" type="email" placeholder="email@vakati.com"></div>
-      <button class="btn btn-primary btn-full" onclick="doFirstSetup()">Create Partner Account & Continue</button>
+      <button class="btn btn-primary btn-full" onclick="doFirstSetup()">🚀 Set Up All Users & Continue</button>
     </div>
   </div>
 </div>
@@ -755,22 +750,27 @@ function seedData(){ /* data loaded from sheet */ }
 
 // ── AUTH ──
 async function doFirstSetup(){
-  const first = document.getElementById('setup-first').value.trim();
-  const last  = document.getElementById('setup-last').value.trim();
-  const email = document.getElementById('setup-email').value.trim();
-  if(!first || !last) return toast('Please enter first and last name');
-  const name = first + ' ' + last;
-  const initials = (first[0] + last[0]).toUpperCase();
-  const id = 'partner-' + first.toLowerCase().replace(/[^a-z]/g,'') + '-' + Date.now();
-  users.push({id, name, role:'partner', initials, email});
-  // Save to Firebase immediately
+  // Push all Vakati & Associates users at once
+  const defaultUsers = [
+    {id:'partner-rupasri-001', name:'Rupasri Vakati',   role:'partner', initials:'RV', email:''},
+    {id:'partner-lokesh-002',  name:'Lokesh Reddy',     role:'partner', initials:'LR', email:''},
+    {id:'partner-vijay-003',   name:'Vijay Kumar',      role:'partner', initials:'VK', email:''},
+    {id:'staff-divya-004',     name:'Divya T',          role:'staff',   initials:'DT', email:''},
+    {id:'staff-srikanth-005',  name:'Srikanth Bhaskar', role:'staff',   initials:'SB', email:''},
+    {id:'staff-suresh-006',    name:'Suresh Babu',      role:'staff',   initials:'SB', email:''},
+    {id:'staff-rohith-007',    name:'Rohith Patel',     role:'staff',   initials:'RP', email:''},
+  ];
+  users = defaultUsers;
+  const btn = document.querySelector('#login-setup button');
+  if(btn){ btn.textContent = 'Setting up…'; btn.disabled = true; }
   try{
     await fbSet('feetrack/users', toFbObj(users));
     try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
-    toast('Account created! You can now sign in.');
     buildLoginDropdown();
+    toast('All users set up! Please sign in.');
   } catch(e){
-    toast('Could not save — check your connection');
+    toast('Error: ' + e.message);
+    if(btn){ btn.textContent = 'Retry'; btn.disabled = false; }
   }
 }
 
