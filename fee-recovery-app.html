@@ -956,20 +956,20 @@ function renderDashboard(){
 
   buildNotifications();
   const todayStr = new Date().toDateString();
-  const calledTodayIds = new Set(callLogs.filter(l=>new Date(l.date).toDateString()===todayStr).map(l=>Number(l.clientId)));
+  const calledTodayIds = new Set(callLogs.filter(l=>l.date&&new Date(l.date).toDateString()===todayStr).map(l=>String(l.clientId)));
 
   const allDueToday = visible
     .filter(c=>getCallStatus(c)==='due' && canInteract(c))
     .sort((a,b)=>(parseFloat(b.outstanding)||0)-(parseFloat(a.outstanding)||0));
 
   // Only show clients NOT yet called today
-  const upcomingClients = allDueToday.filter(c=>!calledTodayIds.has(Number(c.id)));
+  const upcomingClients = allDueToday.filter(c=>!calledTodayIds.has(String(c.id)));
 
   const upEl = document.getElementById('dash-upcoming');
 
   const countEl = document.getElementById('today-call-count');
   if(countEl){
-    const doneToday = allDueToday.length - upcomingClients.length;
+    const doneToday = allDueToday.filter(c=>calledTodayIds.has(String(c.id))).length;
     countEl.textContent = allDueToday.length>0 ? `${doneToday}/${allDueToday.length} done` : '';
   }
 
@@ -996,6 +996,7 @@ function renderDashboard(){
     // Get all no-answer logs from today — coerce types to avoid mismatch
     const noAnswerToday = callLogs.filter(l =>
       l.outcome === 'no-answer' &&
+      l.date &&
       new Date(l.date).toDateString() === todayStr
     );
     // Deduplicate by clientId — keep latest attempt per client
@@ -1265,15 +1266,15 @@ function renderCallLog(){
 
   // staff can't see calls on partner-only clients
   if(!isPartner()){
-    const partnerClientIds = new Set(clients.filter(c=>c.access==='partner').map(c=>c.id));
-    logs = logs.filter(l=>!partnerClientIds.has(l.clientId));
+    const partnerClientIds = new Set(clients.filter(c=>c.access==='partner').map(c=>String(c.id)));
+    logs = logs.filter(l=>!partnerClientIds.has(String(l.clientId)));
   }
 
   const el = document.getElementById('call-log-container');
   if(logs.length===0){ el.innerHTML='<div class="empty"><div class="empty-icon">📋</div>No calls logged yet</div>'; return; }
 
   el.innerHTML = logs.map(l=>{
-    const c = clients.find(x=>x.id===l.clientId);
+    const c = clients.find(x=>String(x.id)===String(l.clientId));
     const canDelete = isPartner() || l.userId === currentUser.id;
     return `<div class="call-log-item" id="call-item-${l.id}">
       <div class="call-dot"></div>
@@ -1303,7 +1304,7 @@ function openDetail(id){
   document.getElementById('detail-freq').innerHTML = freqLabel(c.freq);
   document.getElementById('detail-next').textContent = c.nextDue?fmtDate(c.nextDue):'—';
 
-  const logs = callLogs.filter(l=>l.clientId===id);
+  const logs = callLogs.filter(l=>String(l.clientId)===String(id));
   const dc = document.getElementById('detail-calls');
   if(logs.length===0){ dc.innerHTML='<div style="color:var(--text2);font-size:13px;padding:1rem 0">No calls logged yet</div>'; }
   else {
@@ -1722,28 +1723,52 @@ function sanitiseCallLogs(arr){
   }));
 }
 
+function safeValues(obj){
+  if(!obj) return [];
+  if(Array.isArray(obj)) return obj.filter(Boolean);
+  return Object.values(obj).filter(Boolean);
+}
+
 async function loadFromSheet(){
   isLoading = true;
   showLoader('Loading data from Firebase…');
   try {
     const data = await fbGet('feetrack');
     if(data){
+      // Users
       if(data.users){
-        const arr = Object.values(data.users);
+        const arr = safeValues(data.users);
         const seen = {};
-        arr.forEach(u=>{ seen[u.id]=u; });
+        arr.forEach(u=>{ if(u&&u.id) seen[u.id]=u; });
         users = Object.values(seen);
         try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
       }
+      // Clients
       if(data.clients){
-        clients = sanitiseClients(Object.values(data.clients));
+        clients = sanitiseClients(safeValues(data.clients));
       }
+      // Call logs — keep as strings for clientId to avoid type mismatch
       if(data.callLogs){
-        callLogs = sanitiseCallLogs(Object.values(data.callLogs));
+        callLogs = safeValues(data.callLogs)
+          .filter(l => l && l.id)
+          .map(l=>({
+            ...l,
+            id:              l.id,
+            clientId:        String(l.clientId), // keep as string — matches client.id after toString()
+            amountRecovered: parseFloat(l.amountRecovered)||0,
+            date:            l.date||null,
+            outcome:         l.outcome||'',
+            notes:           l.notes||'',
+            userName:        l.userName||'',
+            userId:          l.userId||'',
+          }))
+          .sort((a,b)=>new Date(b.date)-new Date(a.date)); // newest first
       }
+      // Import history
       if(data.importHistory){
-        importHistory = Object.values(data.importHistory);
+        importHistory = safeValues(data.importHistory).filter(r=>r&&r.id);
       }
+      // Settings
       if(data.settings){
         try{ Object.assign(settings, data.settings); }catch(e){}
       }
@@ -1752,7 +1777,7 @@ async function loadFromSheet(){
     }
   } catch(e){
     console.error('loadFromSheet error:', e);
-    toast('Firebase error: '+e.message+' — check console for details');
+    toast('Firebase connection error — check your internet');
   }
   hideLoader();
   isLoading = false;
@@ -1867,7 +1892,7 @@ function renderRecovery(){
     return;
   }
   tbody.innerHTML = logs.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(l=>{
-    const c = clients.find(x=>x.id==l.clientId);
+    const c = clients.find(x=>String(x.id)===String(l.clientId));
     return `<tr>
       <td><span style="font-weight:500">${c?c.name:'Unknown'}</span></td>
       <td><span style="font-family:var(--mono);font-weight:600;color:var(--green)">${fmt(+l.amountRecovered||0)}</span></td>
