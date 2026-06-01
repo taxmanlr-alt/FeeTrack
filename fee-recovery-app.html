@@ -961,8 +961,9 @@ function showPage(name){
 
 // ── HELPERS ──
 function fmt(n){ return '₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtDate(s){ if(!s)return '—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
-function fmtDateTime(s){ if(!s)return '—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' + d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+const IST = 'Asia/Kolkata';
+function fmtDate(s){ if(!s)return '—'; const d=new Date(s); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',timeZone:IST}); }
+function fmtDateTime(s){ if(!s)return '—'; const d=new Date(s); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',timeZone:IST}) + ' ' + d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:IST}); }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
 
 function freqLabel(f){
@@ -1281,7 +1282,11 @@ function openLogCall(clientId){
   if(!c||!canInteract(c)) return toast('You do not have access to this client');
   document.getElementById('call-client-id').value = clientId;
   document.getElementById('call-client-name').value = c.name;
-  document.getElementById('call-date').value = new Date().toISOString().slice(0,16);
+  // Set default to IST time
+  const istNow = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const pad2 = n=>String(n).padStart(2,'0');
+  const istStr = `${istNow.getFullYear()}-${pad2(istNow.getMonth()+1)}-${pad2(istNow.getDate())}T${pad2(istNow.getHours())}:${pad2(istNow.getMinutes())}`;
+  document.getElementById('call-date').value = istStr;
   document.getElementById('use-realtime').checked = true;
   document.getElementById('call-date').readOnly = true;
   document.getElementById('call-date').style.background = 'var(--surface2)';
@@ -1331,14 +1336,15 @@ function startRealtimeClock(){
   stopRealtimeClock();
   function tick(){
     const now = new Date();
+    const istTime = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
     const pad = n=>String(n).padStart(2,'0');
-    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const timeStr = `${pad(istTime.getHours())}:${pad(istTime.getMinutes())}:${pad(istTime.getSeconds())}`;
     const el = document.getElementById('live-clock');
     if(el) el.textContent = timeStr;
     const cb = document.getElementById('use-realtime');
     if(cb && cb.checked){
       const dateInput = document.getElementById('call-date');
-      if(dateInput) dateInput.value = now.toISOString().slice(0,16);
+      if(dateInput) dateInput.value = `${istTime.getFullYear()}-${pad(istTime.getMonth()+1)}-${pad(istTime.getDate())}T${pad(istTime.getHours())}:${pad(istTime.getMinutes())}`;
     }
   }
   tick();
