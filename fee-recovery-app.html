@@ -231,6 +231,7 @@
       <span id="user-name" style="font-weight:500;font-size:13px"></span>
       <span id="user-role-badge" class="role-badge"></span>
       <span id="sync-status" style="font-size:12px;min-width:70px;text-align:right"></span>
+      <span id="realtime-indicator" style="font-size:11px;color:var(--green);display:none">● Live</span>
       <button class="btn btn-green" id="emergency-save-btn" style="padding:5px 10px;font-size:12px;display:none" onclick="emergencySave()">💾 Save Now</button>
       <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="doLogout()">Sign out</button>
     </div>
@@ -699,6 +700,115 @@ async function fbGet(path){
     throw e;
   }
 }
+
+// ── REAL-TIME LISTENER ──
+let realtimeSource = null;
+let lastSyncTime = 0;
+
+function startRealtimeSync(){
+  stopRealtimeSync();
+  try {
+    realtimeSource = new EventSource(`${DB_URL}/feetrack.json?stream=json`);
+    realtimeSource.addEventListener('put', (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        if(!payload || !payload.data) return;
+        const now = Date.now();
+        // Ignore updates triggered by our own save (within 2 seconds)
+        if(now - lastSyncTime < 2000) return;
+        // Silently update data in background
+        silentUpdate(payload.data);
+      } catch(err){ console.error('Realtime parse error:', err); }
+    });
+    realtimeSource.addEventListener('patch', (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        if(!payload || !payload.data) return;
+        const now = Date.now();
+        if(now - lastSyncTime < 2000) return;
+        silentUpdate(payload.data);
+      } catch(err){}
+    });
+    realtimeSource.onerror = () => {
+      // Quietly reconnect after 5 seconds
+      stopRealtimeSync();
+      setTimeout(startRealtimeSync, 5000);
+    };
+    console.log('Real-time sync started');
+    const ind = document.getElementById('realtime-indicator');
+    if(ind) ind.style.display = 'inline';
+  } catch(e){
+    console.error('Could not start real-time sync:', e);
+  }
+}
+
+function stopRealtimeSync(){
+  if(realtimeSource){
+    realtimeSource.close();
+    realtimeSource = null;
+  }
+  const ind = document.getElementById('realtime-indicator');
+  if(ind) ind.style.display = 'none';
+}
+
+function silentUpdate(data){
+  if(!data || !currentUser) return; // only update if logged in
+  let changed = false;
+
+  if(data.users){
+    const arr = safeValues(data.users);
+    const seen = {};
+    arr.forEach(u=>{ if(u&&u.id) seen[u.id]=u; });
+    users = Object.values(seen);
+    try{ localStorage.setItem('feetrack_users', JSON.stringify(users)); }catch(e){}
+    buildLoginDropdown();
+    changed = true;
+  }
+  if(data.clients){
+    clients = sanitiseClients(safeValues(data.clients));
+    changed = true;
+  }
+  if(data.callLogs){
+    callLogs = safeValues(data.callLogs)
+      .filter(l => l && l.id)
+      .map(l=>({
+        ...l,
+        id:              l.id,
+        clientId:        String(l.clientId),
+        amountRecovered: parseFloat(l.amountRecovered)||0,
+        date:            l.date||null,
+        outcome:         l.outcome||'',
+        notes:           l.notes||'',
+        userName:        l.userName||'',
+        userId:          l.userId||'',
+      }))
+      .sort((a,b)=>new Date(b.date)-new Date(a.date));
+    changed = true;
+  }
+  if(data.importHistory){
+    importHistory = safeValues(data.importHistory).filter(r=>r&&r.id);
+    changed = true;
+  }
+  if(data.settings){
+    try{ Object.assign(settings, data.settings); }catch(e){}
+  }
+
+  if(changed){
+    calcNextIds();
+    // Re-render current page silently
+    const activePage = document.querySelector('.page.active');
+    if(activePage){
+      const pageId = activePage.id.replace('page-','');
+      if(pageId==='dashboard') renderDashboard();
+      if(pageId==='clients')   renderClients();
+      if(pageId==='calls')     renderCallLog();
+      if(pageId==='recovery')  renderRecovery();
+      if(pageId==='reports')   renderReport();
+    }
+    // Show subtle sync indicator
+    setSyncStatus('saved');
+  }
+}
 async function fbSet(path, data){
   try {
     const res = await fetch(`${DB_URL}/${path}.json`, {
@@ -793,10 +903,11 @@ function doLogin(){
   document.getElementById('nav-users').style.display = isPartner() ? '' : 'none';
   document.getElementById('nav-settings').style.display = isPartner() ? '' : 'none';
   document.getElementById('emergency-save-btn').style.display = isPartner() ? '' : 'none';
-  loadFromSheet();
+  loadFromSheet().then(()=>{ startRealtimeSync(); });
 }
 function doLogout(){
   currentUser = null;
+  stopRealtimeSync();
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   // Show spinner while reloading users
@@ -1820,6 +1931,7 @@ function saveToSheet(){
   setSyncStatus('pending');
   saveTimer = setTimeout(async ()=>{
     setSyncStatus('syncing');
+    lastSyncTime = Date.now();
     try {
       // Save each collection separately — atomic, no corruption
       await fbSet('feetrack/users',         toFbObj(users));
