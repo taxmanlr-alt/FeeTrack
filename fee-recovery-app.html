@@ -253,17 +253,33 @@
       </div>
       <div class="metrics-grid" id="metrics-grid"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-        <div class="card">
-          <div style="font-size:14px;font-weight:600;margin-bottom:14px">⚠️ Overdue Calls Today</div>
-          <div id="dash-overdue"></div>
+        <div class="card" style="display:flex;flex-direction:column">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+            ⚠️ Overdue Calls
+            <span id="overdue-count" style="font-size:12px;font-weight:500;color:var(--red)"></span>
+          </div>
+          <select id="overdue-sort" onchange="renderDashboard()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-family:var(--font);margin-bottom:10px;background:var(--surface)">
+            <option value="outstanding">Sort by Outstanding (highest)</option>
+            <option value="name">Sort by Name (A-Z)</option>
+            <option value="due">Sort by Due Date (oldest)</option>
+          </select>
+          <div id="dash-overdue" style="overflow-y:auto;max-height:380px;flex:1"></div>
         </div>
         <div class="card">
           <div style="font-size:14px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">📋 Calls to Make Today <span id="today-call-count" style="font-size:12px;font-weight:500;color:var(--text2)"></span></div>
           <div id="dash-upcoming"></div>
         </div>
-        <div class="card">
-          <div style="font-size:14px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">📵 No Answer Today <span id="no-answer-count" style="font-size:12px;font-weight:500;color:var(--text2)"></span></div>
-          <div id="dash-no-answer"></div>
+        <div class="card" style="display:flex;flex-direction:column">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+            📵 No Answer
+            <span id="no-answer-count" style="font-size:12px;font-weight:500;color:var(--text2)"></span>
+          </div>
+          <select id="na-filter" onchange="renderDashboard()" style="font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:8px;font-family:var(--font);margin-bottom:10px;background:var(--surface)">
+            <option value="all">All time</option>
+            <option value="today">Today only</option>
+            <option value="week">This week</option>
+          </select>
+          <div id="dash-no-answer" style="overflow-y:auto;max-height:380px;flex:1"></div>
         </div>
       </div>
     </div>
@@ -1052,17 +1068,24 @@ function renderDashboard(){
     <div class="metric-card"><div class="metric-label">Due today</div><div class="metric-value" style="color:var(--amber)">${dueToday}</div><div class="metric-sub">Scheduled for today</div></div>
   `;
 
-  const overdueClients = visible.filter(c=>getCallStatus(c)==='overdue'&&canInteract(c));
+  const sortBy = (document.getElementById('overdue-sort')||{value:'outstanding'}).value;
+  let overdueClients = visible.filter(c=>getCallStatus(c)==='overdue'&&canInteract(c));
+  if(sortBy==='outstanding') overdueClients.sort((a,b)=>(parseFloat(b.outstanding)||0)-(parseFloat(a.outstanding)||0));
+  else if(sortBy==='name')   overdueClients.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sortBy==='due')    overdueClients.sort((a,b)=>new Date(a.nextDue)-new Date(b.nextDue));
   const odEl = document.getElementById('dash-overdue');
-  if(overdueClients.length===0){ odEl.innerHTML='<div class="empty"><div class="empty-icon">✅</div>No overdue calls</div>'; }
-  else {
-    odEl.innerHTML = overdueClients.slice(0,4).map(c=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div>
-          <div style="font-weight:500;font-size:13px">${c.name}</div>
-          <div style="font-size:12px;color:var(--text2)">${fmt(c.outstanding)} outstanding · ${fmtDate(c.nextDue)}</div>
+  const odCount = document.getElementById('overdue-count');
+  if(odCount) odCount.textContent = overdueClients.length > 0 ? overdueClients.length + ' clients' : '';
+  if(overdueClients.length===0){
+    odEl.innerHTML='<div class="empty"><div class="empty-icon">✅</div>No overdue calls</div>';
+  } else {
+    odEl.innerHTML = overdueClients.map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${fmt(c.outstanding)} · Due ${fmtDate(c.nextDue)}</div>
         </div>
-        <button class="btn btn-green" style="padding:5px 10px;font-size:12px" onclick="openLogCall(${c.id})">Log call</button>
+        <button class="btn btn-green" style="padding:4px 10px;font-size:11px;white-space:nowrap;margin-left:8px" onclick="openLogCall(${c.id})">Log call</button>
       </div>`).join('');
   }
 
@@ -1101,31 +1124,30 @@ function renderDashboard(){
       </div>`).join('') + (remaining>0?`<div style="text-align:center;padding:10px;font-size:12px;color:var(--blue);cursor:pointer" onclick="showPage('clients');document.querySelectorAll('.nav-btn')[2].classList.add('active')">+ ${remaining} more — view all in Clients →</div>`:'');
   }
 
-  // ── No Answer Today ──
+  // ── No Answer — all time, filtered by dropdown ──
   const naEl = document.getElementById('dash-no-answer');
   const naCountEl = document.getElementById('no-answer-count');
+  const naFilter = (document.getElementById('na-filter')||{value:'all'}).value;
   if(naEl){
-    // Get all no-answer logs from today — coerce types to avoid mismatch
-    const noAnswerToday = callLogs.filter(l =>
-      l.outcome === 'no-answer' &&
-      l.date &&
-      new Date(l.date).toDateString() === todayStr
-    );
-    // Deduplicate by clientId — keep latest attempt per client
-    const seenNA = {};
-    [...noAnswerToday].sort((a,b)=>new Date(b.date)-new Date(a.date))
-      .forEach(l => { const cid = String(l.clientId); if(!seenNA[cid]) seenNA[cid]=l; });
-    const uniqueNA = Object.values(seenNA)
-      .filter(l => canInteract(clients.find(c=>String(c.id)===String(l.clientId))||{access:'staff'}));
+    const now = new Date();
+    const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate()-now.getDay()); startOfWeek.setHours(0,0,0,0);
 
-    if(naCountEl) naCountEl.textContent = uniqueNA.length > 0 ? uniqueNA.length + ' clients' : '';
+    // All no-answer logs — no date restriction by default
+    let naLogs = callLogs.filter(l => l.outcome === 'no-answer' && l.date);
+    if(naFilter==='today') naLogs = naLogs.filter(l=>new Date(l.date).toDateString()===todayStr);
+    if(naFilter==='week')  naLogs = naLogs.filter(l=>new Date(l.date)>=startOfWeek);
 
-    if(uniqueNA.length === 0){
-      naEl.innerHTML = '<div class="empty"><div class="empty-icon">📞</div>No unanswered calls yet</div>';
+    // Show every individual call — sorted newest first — no deduplication
+    naLogs = naLogs
+      .filter(l => canInteract(clients.find(c=>String(c.id)===String(l.clientId))||{access:'staff'}))
+      .sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+    if(naCountEl) naCountEl.textContent = naLogs.length > 0 ? naLogs.length + ' calls' : '';
+
+    if(naLogs.length === 0){
+      naEl.innerHTML = '<div class="empty"><div class="empty-icon">📞</div>No unanswered calls</div>';
     } else {
-      const showNA = uniqueNA.slice(0,8);
-      const remNA = uniqueNA.length - showNA.length;
-      naEl.innerHTML = showNA.map(l => {
+      naEl.innerHTML = naLogs.map(l => {
         const c = clients.find(x => String(x.id) === String(l.clientId));
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
           <div style="flex:1;min-width:0">
@@ -1134,7 +1156,7 @@ function renderDashboard(){
           </div>
           <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px;white-space:nowrap;margin-left:8px" onclick="openLogCall(${l.clientId})">Retry</button>
         </div>`;
-      }).join('') + (remNA > 0 ? `<div style="text-align:center;padding:8px;font-size:12px;color:var(--text2)">+${remNA} more</div>` : '');
+      }).join('');
     }
   }
 }
